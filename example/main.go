@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-    "os"
+	"os"
 	"log/slog"
 
     "github.com/Ruvad39/go-alor"
@@ -36,5 +36,23 @@ func main(){
 	 }
 	slog.Info("time", "servTime",servTime.String()) 
 
+	// получение текущих рыночных данных по иструменту
+	market, err := client.GetQuotes(ctx, "SBER")
+	//market, err := client.GetQuotes(ctx, "RTS-6.24")
+	if err != nil {
+		slog.Error("ошибка GetQuotes: " + err.Error())
+	}
+	//fmt.Println(sec) 
+	slog.Info("Quotes", 
+		"symbol",       market[0].Symbol,
+		"description",  market[0].Description,
+		"lastPrice",    market[0].LastPrice,
+		"Bid",          market[0].Bid,
+		"ask",          market[0].Ask,
+		"LotValue",     market[0].LotValue,
+		"LotSize",      market[0].LotSize,
+		"OpenInterest", market[0].OpenInterest,
+		"LastTime", 	market[0].LastTime().String(),
+	)	
 
 }

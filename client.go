@@ -30,6 +30,7 @@ type HTTPClient interface {
 type Client struct {
     token       string 
     baseURL     string
+    exchange    string  // с какой биржей работаем
 
     UserAgent   string    // если проставлен, пропишем User agent в http запросе
     httpClient  HTTPClient //*http.Client
@@ -42,6 +43,7 @@ type Client struct {
 func NewClient( opts ...ClientOption) (*Client, error) {
     c := &Client{
         baseURL:     prodServer,
+        exchange:    "MOEX",            // по умолчанию работет с биржей MOEX
         httpClient:  http.DefaultClient,
         Logger :     slog.New(slog.NewTextHandler(os.Stdout, nil)), //io.Discard
     }
@@ -95,13 +97,11 @@ func (client *Client) RequestHttp(ctx context.Context, httpMethod string, url st
     
     client.Logger.Debug("RequestHttp", "httpMethod", httpMethod, "url", url, "StatusCode", resp.StatusCode)
 
-
     return resp, err
 }
 
 // выполним запрос  (вернем []byte)
 func (client *Client) GetHttp(ctx context.Context, httpMethod string, url string, body interface{})([]byte, error){
-
     resp, err := client.RequestHttp(ctx, httpMethod, url, body )
 
     if err != nil {
@@ -121,6 +121,11 @@ func (client *Client) GetHttp(ctx context.Context, httpMethod string, url string
 func (client *Client) GetTime(ctx context.Context) (time.Time, error){
     endPoint := "/md/v2/time"
     url, err := url.Parse(client.baseURL)
+    if err != nil {
+        client.Logger.Error("ошибка разбора baseURL", "err", err.Error())
+        return time.Now(), err
+    }    
+
     url.Path = path.Join(url.Path, endPoint)
 
     resp, err := client.GetHttp(ctx,"GET", url.String(), nil)
@@ -141,14 +146,14 @@ func (client *Client) GetTime(ctx context.Context) (time.Time, error){
 }
 
 
-// вернем текущую версию
+// (debug) вернем текущую версию
 func (c *Client) Version() string{
     return libraryVersion
 }
 
 
 
-
+// входящие параметры для создания клиента
 type ClientOption func(c *Client)
 
 // WithLogger задает логгер 
@@ -167,9 +172,20 @@ func WithGttpClient(client HTTPClient) ClientOption {
     }
 }
 
+// url сервера
+// по умолчанию стоит Боевой контур ("https://api.alor.ru")
 func WithServer(params string) ClientOption {
     return func(opts *Client) {
         opts.baseURL = params
+    }
+}
+
+// с какой биржей работаем
+// MOEX - Московская биржа (стоит по умолчанию)
+// SPBX - СПБ Биржа
+func WithExchange(params string) ClientOption {
+    return func(opts *Client) {
+        opts.exchange = params
     }
 }
 
