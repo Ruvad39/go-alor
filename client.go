@@ -3,189 +3,159 @@ package alor
 import (
 	"bytes"
 	"context"
-	"encoding/json"
-	"io/ioutil"
-	"log/slog"
+	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"os"
-    "time"
-    "net/url"
-    "path"
-    "strconv"
 )
 
+// Endpoints
 const (
-    libraryName    = "ALOR API GO"
-    libraryVersion = "0.0.1"
-    devServer      = "https://apidev.alor.ru" //Тестовый контур
-    prodServer     = "https://api.alor.ru"    //Боевой контур
-
+	libraryName    = "ALOR API GO"
+	libraryVersion = "0.0.3"
+	apiProdURL     = "https://api.alor.ru"    // Боевой контур
+	apiDevURL      = "https://apidev.alor.ru" // Тестовый контур
+	oauthProdURL   = "https://oauth.alor.ru"
+	oauthDevURL    = "https://oauthdev.alor.ru"
 )
 
+// UseDevelop использовать тестовый или боевой сервер
+var UseDevelop = false
 
-type HTTPClient interface {
-    Do(req *http.Request) (*http.Response, error)
+// getAPIEndpoint return the base endpoint of the Rest API according the UseDevelop flag
+func getAPIEndpoint() (string, string) {
+	if UseDevelop {
+		return apiDevURL, oauthDevURL
+	}
+	return apiProdURL, oauthProdURL
 }
 
+// NewClient создание нового клиента
+func NewClient(token string) *Client {
+	apidURL, oauthURL := getAPIEndpoint()
+	return &Client{
+		refreshToken: token,
+		ApiURL:       apidURL,
+		OauthURL:     oauthURL,
+		Exchange:     "MOEX", // по умолчанию работаем с биржей MOEX
+		UserAgent:    "Alor/golang",
+		HTTPClient:   http.DefaultClient,
+		Logger:       log.New(os.Stderr, "go-alor ", log.LstdFlags),
+	}
+}
+
+type doFunc func(req *http.Request) (*http.Response, error)
+
+// Client define API client
 type Client struct {
-    token       string 
-    baseURL     string
-    exchange    string  // с какой биржей работаем
-
-    UserAgent   string    // если проставлен, пропишем User agent в http запросе
-    httpClient  HTTPClient //*http.Client
-    Logger      *slog.Logger
-
+	clientId     string
+	refreshToken string //  Refresh токен пользователя
+	accessToken  string // JWT токен для дальнейшей авторизации
+	Exchange     string // с какой биржей работаем по умолчанию
+	ApiURL       string
+	OauthURL     string
+	UserAgent    string
+	HTTPClient   *http.Client
+	Debug        bool
+	Logger       *log.Logger
+	TimeOffset   int64
 }
 
-
-// создание клиента
-func NewClient( opts ...ClientOption) (*Client, error) {
-    c := &Client{
-        baseURL:     prodServer,
-        exchange:    "MOEX",            // по умолчанию работет с биржей MOEX
-        httpClient:  http.DefaultClient,
-        Logger :     slog.New(slog.NewTextHandler(os.Stdout, nil)), //io.Discard
-    }
-    // обрабратаем входящие параметры
-    for _, opt := range opts {
-        opt(c)
-    }
-
-    return c, nil
+func (c *Client) debug(format string, v ...interface{}) {
+	if c.Debug {
+		c.Logger.Printf(format, v...)
+	}
 }
 
+func (c *Client) parseRequest(r *request, opts ...RequestOption) (err error) {
+	// set request options from user
+	for _, opt := range opts {
+		opt(r)
+	}
 
-// выполним запрос  (вернем http.Response)
-func (client *Client) RequestHttp(ctx context.Context, httpMethod string, url string, body interface{})(*http.Response, error){
+	err = c.GetJWT()
+	if err != nil {
+		c.debug("error  %s", err.Error())
+		return err
+	}
 
-    //client.Logger.Debug("RequestHttp", slog.Any("body", body))
-    buf := new(bytes.Buffer)
-    if body != nil {
-        json.NewEncoder(buf).Encode(body)
-        client.Logger.Debug("RequestHttp", slog.Any("buf", buf))
-    } 
-    
-    req, err := http.NewRequestWithContext(ctx, httpMethod, url, buf)         
-    if err != nil {
-        client.Logger.Error("RequestHttp", "httpMethod", httpMethod, "url", url, "err", err.Error())
-        return nil, err
-    }     
+	err = r.validate()
+	if err != nil {
+		return err
+	}
 
-    // если есть токен доступа = добавим его в заголовок
-    if client.token != ""{
-        bearer := "Bearer " + client.token 
-        req.Header.Add("Authorization", bearer)
-    }
+	queryString := r.query.Encode()
+	body := &bytes.Buffer{}
+	bodyString := r.form.Encode()
+	header := http.Header{}
+	if r.header != nil {
+		header = r.header.Clone()
+	}
 
-    // добавляем заголовки
-    if client.UserAgent != "" {
-        req.Header.Set("User-Agent", client.UserAgent)
-    }    
-    if body != nil {
-        req.Header.Set("Content-Type", "application/json")
-    }
-    if client.token != ""{
-        req.Header.Add("X-Api-Key", client.token)
-    }
-    
-    resp, err := client.httpClient.Do(req)
-    if err != nil {
-        client.Logger.Error("RequestHttp", "httpMethod", httpMethod, "url", url, "err", err.Error())
-        return nil, err
-    }
-    
-    client.Logger.Debug("RequestHttp", "httpMethod", httpMethod, "url", url, "StatusCode", resp.StatusCode)
+	if c.accessToken != "" {
+		header.Set("Authorization", "Bearer "+c.accessToken)
+	}
 
-    return resp, err
+	fullURL := fmt.Sprintf("%s%s", c.ApiURL, r.endpoint)
+	// только если ранее мы не заполнили полный путь
+	if r.fullURL == "" {
+
+		if queryString != "" {
+			fullURL = fmt.Sprintf("%s?%s", fullURL, queryString)
+		}
+		r.fullURL = fullURL
+	}
+	c.debug("full url: %s, body: %s", r.fullURL, bodyString)
+
+	r.header = header
+	r.body = body
+	return nil
 }
 
-// выполним запрос  (вернем []byte)
-func (client *Client) GetHttp(ctx context.Context, httpMethod string, url string, body interface{})([]byte, error){
-    resp, err := client.RequestHttp(ctx, httpMethod, url, body )
+func (c *Client) callAPI(ctx context.Context, r *request, opts ...RequestOption) (data []byte, err error) {
+	err = c.parseRequest(r, opts...)
+	if err != nil {
+		return []byte{}, err
+	}
+	req, err := http.NewRequest(r.method, r.fullURL, r.body)
+	if err != nil {
+		return []byte{}, err
+	}
+	req = req.WithContext(ctx)
+	req.Header = r.header
+	c.debug("request: %#v", req)
 
-    if err != nil {
-        client.Logger.Error("RequestHttp", "httpMethod", httpMethod, "url", url, "err", err.Error())
-        return nil, err
-    }
+	res, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return []byte{}, err
+	}
+	//data, err = ioutil.ReadAll(res.Body)
+	data, err = io.ReadAll(res.Body)
+	if err != nil {
+		return []byte{}, err
+	}
+	defer func() {
+		cerr := res.Body.Close()
+		// Only overwrite the retured error if the original error was nil and an
+		// error occurred while closing the body.
+		if err == nil && cerr != nil {
+			err = cerr
+		}
+	}()
 
-    if resp.StatusCode != http.StatusOK {
-        client.Logger.Error("RequestHttp", slog.Any("resp",resp))
-    }
+	//c.debug("response: %#v", res)
+	//c.debug("response body: %s", string(data))
+	c.debug("response status code: %d", res.StatusCode)
+	//c.debug("debug: GET %s -> %d", r.fullURL, res.StatusCode)
 
-    defer resp.Body.Close()
-    return ioutil.ReadAll(resp.Body)
-
+	if res.StatusCode >= http.StatusBadRequest {
+		return nil, fmt.Errorf("error HTTP %d: %s", res.StatusCode, http.StatusText(res.StatusCode))
+	}
+	return data, nil
 }
-
-func (client *Client) GetTime(ctx context.Context) (time.Time, error){
-    endPoint := "/md/v2/time"
-    url, err := url.Parse(client.baseURL)
-    if err != nil {
-        client.Logger.Error("ошибка разбора baseURL", "err", err.Error())
-        return time.Now(), err
-    }    
-
-    url.Path = path.Join(url.Path, endPoint)
-
-    resp, err := client.GetHttp(ctx,"GET", url.String(), nil)
-    if err != nil {
-        client.Logger.Error("GetSysTime GetHttp", "err", err.Error())
-        return time.Now(), err
-    }    
-    tt, _:= strconv.ParseInt(string(resp), 10, 64)
-    if err != nil {
-        client.Logger.Error("GetSysTime ParseInt", "err", err.Error())
-        return time.Now(), err
-    }
-    servTime := time.Unix(tt, 0) 
-
-    return servTime, nil
-
-
-}
-
 
 // (debug) вернем текущую версию
-func (c *Client) Version() string{
-    return libraryVersion
+func (c *Client) Version() string {
+	return libraryVersion
 }
-
-
-
-// входящие параметры для создания клиента
-type ClientOption func(c *Client)
-
-// WithLogger задает логгер 
-// По умолчанию логирование включено на ошибки
-func WithLogger(logger *slog.Logger) ClientOption {
-    return func(opts *Client) {
-        opts.Logger = logger
-    }
-}
-
-// установим свой HttpClient
-// по умолчанию стоит http.DefaultClient
-func WithGttpClient(client HTTPClient) ClientOption {
-    return func(opts *Client) {
-        opts.httpClient = client
-    }
-}
-
-// url сервера
-// по умолчанию стоит Боевой контур ("https://api.alor.ru")
-func WithServer(params string) ClientOption {
-    return func(opts *Client) {
-        opts.baseURL = params
-    }
-}
-
-// с какой биржей работаем
-// MOEX - Московская биржа (стоит по умолчанию)
-// SPBX - СПБ Биржа
-func WithExchange(params string) ClientOption {
-    return func(opts *Client) {
-        opts.exchange = params
-    }
-}
-

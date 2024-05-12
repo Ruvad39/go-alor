@@ -1,44 +1,57 @@
 package alor
 
 import (
-    "context"
-    "net/url"
-    "path"
-    "encoding/json"
-   
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/url"
+	"path"
 )
 
-// реализован только этот метод. так как только он позволяет делать запрос без авторизации
-// пример: https://apidev.alor.ru/md/v2/Securities/MOEX:SiH4/quotes
-func (client *Client) GetQuotes(ctx context.Context, symbol string) ([]Quote, error){
-	endPoint := "md/v2/Securities"
-	endPoint2 := "quotes"
-	ticker := client.exchange +":"+symbol // "MOEX:"+ symbol
+/*
+	/md/v2/Securities/{symbols}/quotes Получение информации о котировках для выбранных инструментов
 
- 	result := make([]Quote, 0)
+	symbols Принимает несколько пар биржа-тикер. Пары отделены запятыми. Биржа и тикер разделены двоеточием
+			MOEX:SBER,MOEX:GAZP,SPBX:AAPL
+*/
 
-	url, err := url.Parse(client.baseURL)
-    if err != nil {
-        client.Logger.Error("ошибка разбора baseURL", "err", err.Error())
-        return result, err
-    }
-    url.Path = path.Join(url.Path, endPoint,ticker,endPoint2)
-    //queryURL.Path = path.Join(queryURL.Path, "md/v2/Securities",ticker,"quotes")
+// GetQuotes Получение информации о котировках для выбранных инструментов.
+// Принимает несколько пар биржа-тикер. Пары отделены запятыми. Биржа и тикер разделены двоеточием
+func (c *Client) GetQuotes(ctx context.Context, symbols string) ([]Quote, error) {
+	queryURL, _ := url.Parse("/md/v2/Securities")
+	queryURL.Path = path.Join(queryURL.Path, symbols, "quotes")
 
+	r := &request{
+		method:   http.MethodGet,
+		endpoint: queryURL.String(),
+	}
 
- 	resp, err := client.GetHttp(ctx,"GET", url.String(), nil)
-    // res, err := client.GetHttp(ctx,"GET", queryURL.String())
-    if err != nil {
-        client.Logger.Error("GetQuotes ", "err", err.Error())
-        return result, err
-    }    
-
-	err = json.Unmarshal(resp, &result)
+	result := make([]Quote, 0)
+	data, err := c.callAPI(ctx, r)
 	if err != nil {
-		client.Logger.Error("GetQuotes ", "err", err.Error())
+		//c.Logger.Error("GetQuotes ", "err", err.Error())
 		return result, err
 	}
-    return result, nil
 
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		//c.Logger.Error("GetQuotes ", "err", err.Error())
+		return result, err
+	}
+	return result, nil
 
+}
+
+// GetQuote Получение информации о котировках для одного выбранного инструмента.
+// Указываем тикер без указания биржи. Название биржи берется по умолчанию
+func (c *Client) GetQuote(ctx context.Context, symbol string) (Quote, error) {
+	ticker := c.Exchange + ":" + symbol
+	quotes, err := c.GetQuotes(ctx, ticker)
+	if err != nil {
+		return Quote{}, err
+	}
+	if len(quotes) > 0 {
+		return quotes[0], nil
+	}
+	return Quote{}, nil
 }

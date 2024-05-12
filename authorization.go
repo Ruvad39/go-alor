@@ -27,7 +27,6 @@ type JSResp struct {
 // GetJWT получим accessToken
 // TODO определять время работы токена
 func (c *Client) GetJWT() error {
-	//c.debug("GetJWT " + c.accessToken)
 	if c.refreshToken == "" {
 		c.accessToken = ""
 		return nil
@@ -41,12 +40,7 @@ func (c *Client) GetJWT() error {
 	// добавляем к URL параметры
 	queryURL.RawQuery = q.Encode()
 
-	//r := &request{
-	//	method:  http.MethodPost,
-	//	fullURL: queryURL.String(),
-	//}
-	//ctx := context.Background()
-	c.debug("full url: %s", queryURL.String())
+	//c.debug("full url: %s", queryURL.String())
 	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
 	if err != nil {
 		return err
@@ -70,10 +64,12 @@ func (c *Client) GetJWT() error {
 	err = json.Unmarshal(data, &result)
 	//slog.D("", slog.Any("r", r))
 	if err != nil {
-		c.debug("error  %s", err.Error())
+		//c.debug("error  %s", err.Error())
 		return err
 	}
 	c.accessToken = result.AccessToken
+	//c.debug("result.AccessToken  %s", result.AccessToken)
+
 	return nil
 
 }

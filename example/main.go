@@ -2,30 +2,36 @@ package main
 
 import (
 	"context"
-	"os"
+	"github.com/Ruvad39/go-alor"
+	"github.com/joho/godotenv"
 	"log/slog"
-
-    "github.com/Ruvad39/go-alor"
+	"os"
 )
 
-
-func main(){
-
-	ctx := context.Background()
-	// для отладки
-	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{	Level: slog.LevelDebug,	})		
-	logger_ := slog.New(handler)
-
-	
-	// alor.WithServer("https://apidev.alor.ru") // подключить Тестовый контур
-	//client, err := alor.NewClient( alor.WithLogger(logger_), alor.WithServer("https://apidev.alor.ru"))
-	// создание клиента		
-	// по умолчаию подключен Боевой контур
-	client, err := alor.NewClient( alor.WithLogger(logger_))
-
-	if err != nil {
-		slog.Error("ошибка создания alor.client: " + err.Error())
+// init is invoked before main()
+func init() {
+	// loads values from .env into the system
+	if err := godotenv.Load(); err != nil {
+		slog.Info("No .env file found")
+		//slog.Error(err.Error())
 	}
+}
+
+func main() {
+	ctx := context.Background()
+
+	//refreshToken := os.Getenv("ALOR_REFRESH")
+
+	//refreshToken, ok := os.LookupEnv("ALOR_REFRESH")
+	refreshToken, _ := os.LookupEnv("ALOR_REFRESH")
+
+	//if ok {
+	//	fmt.Println(refreshToken)
+	//}
+	// создание клиента
+	client := alor.NewClient(refreshToken)
+	client.Debug = true
+	//slog.Info("main.", "client.version()", client.Version())
 
 	// получить текущее время сервера
 	// без авторизации задержка по времени 15 минут
@@ -33,26 +39,7 @@ func main(){
 	if err != nil {
 		slog.Error("ошибка получения текущего времени: " + err.Error())
 		return
-	 }
-	slog.Info("time", "servTime",servTime.String()) 
-
-	// получение текущих рыночных данных по иструменту
-	market, err := client.GetQuotes(ctx, "SBER")
-	//market, err := client.GetQuotes(ctx, "RTS-6.24")
-	if err != nil {
-		slog.Error("ошибка GetQuotes: " + err.Error())
 	}
-	//fmt.Println(sec) 
-	slog.Info("Quotes", 
-		"symbol",       market[0].Symbol,
-		"description",  market[0].Description,
-		"lastPrice",    market[0].LastPrice,
-		"Bid",          market[0].Bid,
-		"ask",          market[0].Ask,
-		"LotValue",     market[0].LotValue,
-		"LotSize",      market[0].LotSize,
-		"OpenInterest", market[0].OpenInterest,
-		"LastTime", 	market[0].LastTime().String(),
-	)	
+	slog.Info("time", "servTime", servTime.String())
 
 }
