@@ -1,4 +1,5 @@
-# Библиотека, которая позволяет работать с функционалом [ALOR OpenAPI V2](https://www.alorbroker.ru/trading/openapi)  брокера [Алор](https://www.alorbroker.ru/) из GO
+# Golang SDK для работы с функционалом [Alor OpenAPI V2](https://alor.dev/docs) брокера [Алор](https://www.alorbroker.ru)
+
 
 
 
@@ -21,7 +22,12 @@ GetSecurity(ctx context.Context, board, symbol string) (Security, error)
 GetQuotes(ctx context.Context, symbols string) ([]Quote, error)
 // GetQuote Получение информации о котировках для одного выбранного инструмента.
 GetQuote(ctx context.Context, symbol string) (Quote, error)
-
+// GetPositions получение информации о позициях
+GetPositions(ctx context.Context, portfolio string) ([]Position, error)
+// GetHistory Запрос истории для выбранных биржи и инструмента
+GetHistory(ctx context.Context, symbol string, interval Interval, from, to int64) (History, error)
+// GetCandles Запрос истории свечей для выбранного инструмента (вызывает GetHistory)
+GetCandles(ctx context.Context, symbol string, interval Interval, from, to int64) ([]Candle, error)
 ```
 ## Примеры
 
@@ -69,17 +75,17 @@ slog.Info("securities",
 // sector = FORTS, FOND, CURR
 // Если не указано иное значение параметра limit, в ответе возвращается только 25 объектов за раз
 params := alor.Params{
-Sector: "FOND",
-Board:  "TQBR",
-Query:  "",
-Limit:  400,
+    Sector: "FOND",
+    Board:  "TQBR",
+    Query:  "",
+    Limit:  400,
 }
-Sec, err := client.GetSecurities(ctx, params)
+sec, err := client.GetSecurities(ctx, params)
 if err != nil {
 slog.Info("main.GetSecurity", "err", err.Error())
 return
 }
-slog.Info("GetSecurity", "кол-во", len(Sec))
+slog.Info("GetSecurity", "кол-во", len(sec))
 ```
 ### Получение информации о котировках для выбранных инструментов.
 ```go

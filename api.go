@@ -17,8 +17,14 @@ type IAlorClient interface {
 	GetSecurities(ctx context.Context, params Params) ([]Security, error)
 	// GetQuotes Получение информации о котировках для выбранных инструментов
 	GetQuotes(ctx context.Context, symbols string) ([]Quote, error)
-	// GetQuote Получение информации о котировках для одного выбранного инструмента.
+	// GetQuote Получение информации о котировках для одного выбранного инструмента
 	GetQuote(ctx context.Context, symbol string) (Quote, error)
+	// GetPositions получение информации о позициях
+	GetPositions(ctx context.Context, portfolio string) ([]Position, error)
+	// GetHistory Запрос истории для выбранных биржи и инструмента
+	GetHistory(ctx context.Context, symbol string, interval Interval, from, to int64) (History, error)
+	// GetCandles Запрос истории свечей для выбранного инструмента (вызывает GetHistory)
+	GetCandles(ctx context.Context, symbol string, interval Interval, from, to int64) ([]Candle, error)
 }
 
 // GetTime
