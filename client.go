@@ -45,8 +45,6 @@ func NewClient(token string) *Client {
 	}
 }
 
-type doFunc func(req *http.Request) (*http.Response, error)
-
 // Client define API client
 type Client struct {
 	clientId     string

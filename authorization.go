@@ -53,7 +53,16 @@ func (c *Client) GetJWT() error {
 		return fmt.Errorf("ошибка получения JWT токена: статус %d", res.StatusCode)
 
 	}
-	defer res.Body.Close()
+	//defer res.Body.Close()
+	defer func() {
+		cerr := res.Body.Close()
+		// Only overwrite the retured error if the original error was nil and an
+		// error occurred while closing the body.
+		if err == nil && cerr != nil {
+			err = cerr
+		}
+	}()
+
 	data, err := io.ReadAll(res.Body)
 	//data, err := c.callAPI(ctx, r)
 	if err != nil {
