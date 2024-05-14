@@ -28,6 +28,8 @@ GetPositions(ctx context.Context, portfolio string) ([]Position, error)
 GetHistory(ctx context.Context, symbol string, interval Interval, from, to int64) (History, error)
 // GetCandles Запрос истории свечей для выбранного инструмента (вызывает GetHistory)
 GetCandles(ctx context.Context, symbol string, interval Interval, from, to int64) ([]Candle, error)
+// GetOrderBooks Получение информации о биржевом стакане
+GetOrderBooks(ctx context.Context, symbol string) (OrderBook, error)
 ```
 ## Примеры
 
@@ -126,6 +128,18 @@ slog.Info("Quotes",
     "LastTime", q.LastTime().String(),
     )
 
+// получение информации о биржевом стакане
+//symbol = "SBER"
+orderbook, err := client.GetOrderBooks(ctx, symbol)
+if err != nil {
+    slog.Info("main.GetOrderBooks", "err", err.Error())
+    return
+}
+
+slog.Info("GetOrderBooks", "orderbook", orderbook.String())
+bid, _ := orderbook.BestBid()
+ask, _ := orderbook.BestAsk()
+slog.Info("orderbook", "BestBid()", bid.Price, "BestAsk()", ask.Price)
 
 
 

@@ -65,4 +65,19 @@ func main() {
 		"OpenInterest", q.OpenInterest,
 		"LastTime", q.LastTime().String(),
 	)
+
+	// получение информации о биржевом стакане
+	//symbol = "SBER"
+	orderbook, err := client.GetOrderBooks(ctx, symbol)
+	if err != nil {
+		slog.Info("main.GetOrderBooks", "err", err.Error())
+		return
+	}
+	//slog.Info("GetOrderBooks", "MsTimestamp", orderbook.MsTimestamp)
+	slog.Info("GetOrderBooks", "orderbook", orderbook.String())
+	bid, _ := orderbook.BestBid()
+	ask, _ := orderbook.BestAsk()
+	slog.Info("orderbook", "BestBid()", bid.Price, "BestAsk()", ask.Price)
+	slog.Info("orderbook", "объем bid", orderbook.Bids.SumDepth(), "объем ask", orderbook.Asks.SumDepth())
+
 }

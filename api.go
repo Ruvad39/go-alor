@@ -25,6 +25,8 @@ type IAlorClient interface {
 	GetHistory(ctx context.Context, symbol string, interval Interval, from, to int64) (History, error)
 	// GetCandles Запрос истории свечей для выбранного инструмента (вызывает GetHistory)
 	GetCandles(ctx context.Context, symbol string, interval Interval, from, to int64) ([]Candle, error)
+	// GetOrderBooks Получение информации о биржевом стакане
+	GetOrderBooks(ctx context.Context, symbol string) (OrderBook, error)
 }
 
 // GetTime

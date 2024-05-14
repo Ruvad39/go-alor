@@ -2,6 +2,7 @@ package alor
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -193,7 +194,7 @@ type PriceVolumeSlice []PriceVolume
 func (slice PriceVolumeSlice) Len() int { return len(slice) }
 
 func (p PriceVolume) String() string {
-	return fmt.Sprintf("PriceVolume{ Price: %s, Volume: %s }", p.Price, p.Volume)
+	return fmt.Sprintf("PriceVolume{ Price: %v, Volume: %v }", p.Price, p.Volume)
 }
 
 // вернем второй элемент
@@ -238,7 +239,7 @@ type OrderBook struct {
 }
 
 func (b *OrderBook) LastTime() time.Time {
-	return time.Unix(b.MsTimestamp, 0)
+	return time.UnixMilli(b.MsTimestamp)
 }
 
 func (b *OrderBook) BestBid() (PriceVolume, bool) {
@@ -255,4 +256,35 @@ func (b *OrderBook) BestAsk() (PriceVolume, bool) {
 	}
 
 	return b.Asks[0], true
+}
+
+func (b *OrderBook) String() string {
+	sb := strings.Builder{}
+
+	sb.WriteString("BOOK ")
+	//sb.WriteString(b.Symbol)
+	sb.WriteString("\n")
+	sb.WriteString(b.LastTime().Format("2006-01-02T15:04:05-0700"))
+	//sb.WriteString(b.LastTime().String())
+	sb.WriteString("\n")
+
+	if len(b.Asks) > 0 {
+		sb.WriteString("ASKS:\n")
+		for i := len(b.Asks) - 1; i >= 0; i-- {
+			sb.WriteString("- ASK: ")
+			sb.WriteString(b.Asks[i].String())
+			sb.WriteString("\n")
+		}
+	}
+
+	if len(b.Bids) > 0 {
+		sb.WriteString("BIDS:\n")
+		for _, bid := range b.Bids {
+			sb.WriteString("- BID: ")
+			sb.WriteString(bid.String())
+			sb.WriteString("\n")
+		}
+	}
+
+	return sb.String()
 }

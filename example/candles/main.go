@@ -28,7 +28,7 @@ func main() {
 	client.Debug = true
 
 	// получить список свечей по инструменту
-	timeFrom, _ := time.Parse("2006-01-02", "2024-05-01")
+	timeFrom, _ := time.Parse("2006-01-02", "2024-05-14")
 	timeTo, _ := time.Parse("2006-01-02", "2024-06-01")
 
 	//history, err := client.GetHistory(ctx, "SBER", alor.Interval_D1, timeFrom.Unix(), timeTo.Unix())
@@ -45,7 +45,7 @@ func main() {
 	//	)
 	//}
 
-	candles, err := client.GetCandles(ctx, "SBER", alor.Interval_D1, timeFrom.Unix(), timeTo.Unix())
+	candles, err := client.GetCandles(ctx, "SBER", alor.Interval_H1, timeFrom.Unix(), timeTo.Unix())
 	if err != nil {
 		slog.Info("main.GetCandles", "err", err.Error())
 		return
