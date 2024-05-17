@@ -1,13 +1,15 @@
 package alor
 
 import (
-	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 )
 
 // Endpoints
@@ -36,19 +38,20 @@ func NewClient(token string) *Client {
 	apidURL, oauthURL := getAPIEndpoint()
 	return &Client{
 		refreshToken: token,
-		ApiURL:       apidURL,
-		OauthURL:     oauthURL,
-		Exchange:     "MOEX", // по умолчанию работаем с биржей MOEX
-		UserAgent:    "Alor/golang",
-		HTTPClient:   http.DefaultClient,
-		Logger:       log.New(os.Stderr, "go-alor ", log.LstdFlags),
+		//Portfolio:    portfolio,
+		ApiURL:     apidURL,
+		OauthURL:   oauthURL,
+		Exchange:   "MOEX", // по умолчанию работаем с биржей MOEX
+		UserAgent:  "Alor/golang",
+		HTTPClient: http.DefaultClient,
+		Logger:     log.New(os.Stderr, "go-alor ", log.LstdFlags),
 	}
 }
 
 // Client define API client
 type Client struct {
-	clientId     string
-	refreshToken string //  Refresh токен пользователя
+	Portfolio    string // ID портфеля с которым работаем по умолчанию
+	refreshToken string // Refresh токен пользователя
 	accessToken  string // JWT токен для дальнейшей авторизации
 	Exchange     string // с какой биржей работаем по умолчанию
 	ApiURL       string
@@ -84,8 +87,8 @@ func (c *Client) parseRequest(r *request, opts ...RequestOption) (err error) {
 	}
 
 	queryString := r.query.Encode()
-	body := &bytes.Buffer{}
-	bodyString := r.form.Encode()
+	//body := &bytes.Buffer{}
+	//bodyString := r.form.Encode()
 	header := http.Header{}
 	if r.header != nil {
 		header = r.header.Clone()
@@ -104,10 +107,11 @@ func (c *Client) parseRequest(r *request, opts ...RequestOption) (err error) {
 		}
 		r.fullURL = fullURL
 	}
-	c.debug("full url: %s, body: %s", r.fullURL, bodyString)
+	//c.debug("full url: %s, body: %s", r.fullURL, bodyString)
+	c.debug("full url: %s, body: %s", r.fullURL, r.body)
 
 	r.header = header
-	r.body = body
+	//r.body = body
 	return nil
 }
 
@@ -148,7 +152,16 @@ func (c *Client) callAPI(ctx context.Context, r *request, opts ...RequestOption)
 	//c.debug("debug: GET %s -> %d", r.fullURL, res.StatusCode)
 
 	if res.StatusCode >= http.StatusBadRequest {
-		return nil, fmt.Errorf("error HTTP %d: %s", res.StatusCode, http.StatusText(res.StatusCode))
+		apiErr := new(APIError)
+		e := json.Unmarshal(data, apiErr)
+		if e != nil {
+			c.debug("failed to unmarshal json: %s", e)
+			apiErr.Code = strconv.Itoa(res.StatusCode)
+			apiErr.Message = http.StatusText(res.StatusCode)
+		}
+		return nil, apiErr
+		//c.debug("Erorr response body: %s", string(data))
+		//return nil, fmt.Errorf("error HTTP %d: %s", res.StatusCode, http.StatusText(res.StatusCode))
 	}
 	return data, nil
 }
@@ -156,4 +169,20 @@ func (c *Client) callAPI(ctx context.Context, r *request, opts ...RequestOption)
 // (debug) вернем текущую версию
 func (c *Client) Version() string {
 	return libraryVersion
+}
+
+// getRequestID Получение уникального кода запроса
+// Текущее время в наносекундах, прошедших с 01.01.1970 в UTC
+func (c *Client) getRequestID() string {
+	return strconv.FormatInt(time.Now().UnixNano(), 10)
+}
+
+type APIError struct {
+	Code        string `json:"code"`
+	Message     string `json:"message"`
+	OrderNumber string `json:"orderNumber"`
+}
+
+func (e APIError) Error() string {
+	return fmt.Sprintf("<APIError> code=%s, msg=%s", e.Code, e.Message)
 }

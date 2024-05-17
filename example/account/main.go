@@ -59,12 +59,19 @@ func main() {
 	}
 	// получение информации о позициях заданного инструмента
 	// выдает "HTTP 404: Not Found" если нет позиций
-	symbol := "CNY-6.24" //"CRM4"
+	symbol := "MOEX" //"CRM4"
 	position, err := client.GetPosition(ctx, portfolio, symbol)
 	if err != nil {
 		slog.Info("main.GetPosition", "err", err.Error())
 		return
 	}
 	slog.Info("Position", slog.Any("position", position))
+	symbol = "RUB" //денежные средства
+	position, err = client.GetPosition(ctx, portfolio, symbol)
+	if err != nil {
+		slog.Info("main.GetPosition", "err", err.Error())
+		return
+	}
+	slog.Info("Position", "Свободные средства", position.Qty)
 
 }

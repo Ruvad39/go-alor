@@ -103,3 +103,50 @@ func (c *Client) GetLoginPositions(ctx context.Context, login string) ([]Positio
 	}
 	return result, nil
 }
+
+// Portfolio информация о портфеле
+type Portfolio struct {
+	BuyingPowerAtMorning           float64 `json:"buyingPowerAtMorning"`           //Покупательская способность на утро
+	BuyingPower                    float64 `json:"buyingPower"`                    // Покупательская способность
+	Profit                         float64 `json:"profit"`                         // Прибыль за сегодня
+	ProfitRate                     float64 `json:"profitRate"`                     // Норма прибыли, %
+	PortfolioEvaluation            float64 `json:"portfolioEvaluation"`            // Ликвидный портфель
+	PortfolioLiquidationValue      float64 `json:"portfolioLiquidationValue"`      // Оценка портфеля
+	InitialMargin                  float64 `json:"initialMargin"`                  // Маржа
+	RiskBeforeForcePositionClosing float64 `json:"riskBeforeForcePositionClosing"` // Риск до закрытия
+	Commission                     float64 `json:"commission"`                     // Суммарная комиссия (null для Срочного рынка)
+}
+
+type Position struct {
+	Portfolio         string  `json:"portfolio"`         // Идентификатор клиентского портфеля
+	Symbol            string  `json:"symbol"`            // Тикер (Код финансового инструмента)
+	BrokerSymbol      string  `json:"brokerSymbol"`      // Пара Биржа:Тикер
+	Exchange          string  `json:"exchange"`          // Биржа
+	ShortName         string  `json:"shortName"`         // Короткое наименование
+	Volume            float64 `json:"volume"`            // Объём, рассчитанный по средней цен
+	CurrentVolume     float64 `json:"currentVolume"`     // Объём, рассчитанный по текущей цене
+	AvgPrice          float64 `json:"avgPrice"`          // Средняя цена
+	QtyUnits          float64 `json:"qtyUnits"`          // Количество (штуки)
+	OpenUnits         float64 `json:"openUnits"`         // Количество открытых позиций на момент открытия (начала торгов)
+	LotSize           float64 `json:"lotSize"`           // Размер лота
+	QtyT0             float64 `json:"qtyT0"`             // Агрегированное количество T0 (штуки)
+	QtyT1             float64 `json:"qtyT1"`             // Агрегированное количество T1 (штуки)
+	QtyT2             float64 `json:"qtyT2"`             // Агрегированное количество T2 (штуки)
+	QtyTFuture        float64 `json:"qtyTFuture"`        // Количество (штуки)
+	QtyT0Batch        float64 `json:"qtyT0Batch"`        // Агрегированное количество T0 (лоты)
+	QtyT1Batch        float64 `json:"qtyT1Batch"`        // Агрегированное количество T1 (лоты)
+	QtyT2Batch        float64 `json:"qtyT2Batch"`        // Агрегированное количество T2 (лоты)
+	QtyTFutureBatch   float64 `json:"qtyTFutureBatch"`   // Агрегированное количество TFuture (лоты)
+	QtyBatch          float64 `json:"qtyBatch"`          // Агрегированное количество TFuture
+	OpenQtyBatch      float64 `json:"openQtyBatch"`      // Агрегированное количество на момент открытия (начала торгов) (лоты)
+	Qty               float64 `json:"qty"`               // Агрегированное количество (лоты)
+	Open              float64 `json:"open"`              // Агрегированное количество на момент открытия (начала торгов) (штуки)
+	DailyUnrealisedPl float64 `json:"dailyUnrealisedPl"` // Суммарная прибыль или суммарный убыток за день в процентах
+	UnrealisedPl      float64 `json:"unrealisedPl"`      // Суммарная прибыль или суммарный убыток за день в валюте расчётов
+	IsCurrency        bool    `json:"isCurrency"`        // True для валютных остатков (денег), false - для торговых инструментов
+}
+
+// Lot вернем кол-во лот
+func (p *Position) Lot() int64 {
+	return int64(p.Qty)
+}
