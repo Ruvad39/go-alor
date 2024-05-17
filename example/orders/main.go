@@ -61,8 +61,8 @@ func main() {
 	// лимитная продажа
 	//orderID, err := client.SellLimit(ctx, "NVTK", 1, 1228, "comment к сделке")
 	// лимитная покупка
-	//orderID, err := client.BuyLimit(ctx, "SBER", 1, 320.1, "comment к сделке")
-
+	//orderID, err := client.BuyLimit(ctx, "SBER", 1, 322.1, "comment к сделке")
+	//
 	//if err != nil {
 	//	slog.Error("main.SendOrder", "err", err.Error())
 	//	return
@@ -70,7 +70,7 @@ func main() {
 	//slog.Info("sendOrder", "orderID", orderID)
 
 	// отменить ордер
-	orderId := "47030387613"
+	orderId := "47050802385"
 	ok, err := client.CancelOrder(ctx, portfolio, orderId)
 	if err != nil {
 		slog.Error("main.CancelOrder", "err", err.Error(), "ok", ok)

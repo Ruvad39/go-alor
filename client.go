@@ -50,17 +50,18 @@ func NewClient(token string) *Client {
 
 // Client define API client
 type Client struct {
-	Portfolio    string // ID портфеля с которым работаем по умолчанию
-	refreshToken string // Refresh токен пользователя
-	accessToken  string // JWT токен для дальнейшей авторизации
-	Exchange     string // с какой биржей работаем по умолчанию
-	ApiURL       string
-	OauthURL     string
-	UserAgent    string
-	HTTPClient   *http.Client
-	Debug        bool
-	Logger       *log.Logger
-	TimeOffset   int64
+	Portfolio       string    // ID портфеля с которым работаем по умолчанию
+	refreshToken    string    // Refresh токен пользователя
+	accessToken     string    // JWT токен для дальнейшей авторизации
+	cancelTimeToken time.Time // Время завершения действия JWT токена
+	Exchange        string    // С какой биржей работаем по умолчанию
+	ApiURL          string
+	OauthURL        string
+	UserAgent       string
+	HTTPClient      *http.Client
+	Debug           bool
+	Logger          *log.Logger
+	TimeOffset      int64
 }
 
 func (c *Client) debug(format string, v ...interface{}) {

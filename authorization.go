@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 )
 
 /*
@@ -20,6 +21,8 @@ import (
 
 */
 
+const jwtTokenTtl = 60 // Время жизни токена JWT в секундах
+
 type JSResp struct {
 	AccessToken string
 }
@@ -31,6 +34,13 @@ func (c *Client) GetJWT() error {
 		c.accessToken = ""
 		return nil
 	}
+	// если не пустой токен и время окончания токена больше текущего время
+	if c.accessToken != "" && c.cancelTimeToken.After(time.Now()) {
+		//c.debug("GetJWT Не надо формировать новый токен")
+		return nil
+
+	}
+	//c.debug("GetJWT Формируем новый токен")
 
 	queryURL, _ := url.Parse(c.OauthURL)
 	queryURL.Path = path.Join(queryURL.Path, "refresh")
@@ -71,13 +81,12 @@ func (c *Client) GetJWT() error {
 	}
 	var result JSResp
 	err = json.Unmarshal(data, &result)
-	//slog.D("", slog.Any("r", r))
 	if err != nil {
 		//c.debug("error  %s", err.Error())
 		return err
 	}
+	c.cancelTimeToken = time.Now().Add(jwtTokenTtl * time.Second)
 	c.accessToken = result.AccessToken
-	//c.debug("result.AccessToken  %s", result.AccessToken)
 
 	return nil
 
