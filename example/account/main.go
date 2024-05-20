@@ -50,24 +50,28 @@ func main() {
 		)
 	}
 
-	slog.Info("GetLoginPositions", "кол-во", len(positions))
-	for n, pos := range positions {
-		slog.Info("LoginPositions",
-			"row", n,
-			slog.Any("pos", pos),
-		)
-	}
+	//slog.Info("GetLoginPositions", "кол-во", len(positions))
+	//for n, pos := range positions {
+	//	slog.Info("LoginPositions",
+	//		"row", n,
+	//		slog.Any("pos", pos),
+	//	)
+	//}
 	// получение информации о позициях заданного инструмента
 	// выдает "HTTP 404: Not Found" если нет позиций
 	symbol := "MOEX" //"CRM4"
-	position, err := client.GetPosition(ctx, portfolio, symbol)
+	position, ok, err := client.GetPosition(ctx, portfolio, symbol)
 	if err != nil {
 		slog.Info("main.GetPosition", "err", err.Error())
 		return
 	}
+	if !ok {
+		slog.Info("main.GetPosition", symbol, "нет позиции")
+		//return
+	}
 	slog.Info("Position", slog.Any("position", position))
 	symbol = "RUB" //денежные средства
-	position, err = client.GetPosition(ctx, portfolio, symbol)
+	position, _, err = client.GetPosition(ctx, portfolio, symbol)
 	if err != nil {
 		slog.Info("main.GetPosition", "err", err.Error())
 		return

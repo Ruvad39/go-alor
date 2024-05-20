@@ -3,6 +3,7 @@ package alor
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -21,6 +22,12 @@ const (
 	oauthProdURL   = "https://oauth.alor.ru"
 	oauthDevURL    = "https://oauthdev.alor.ru"
 )
+
+var ErrNotFound = errors.New("404 Not Found")
+
+//const (
+//	ErrNotFound = "404 Not Found"
+//)
 
 // UseDevelop использовать тестовый или боевой сервер
 var UseDevelop = false
@@ -154,6 +161,13 @@ func (c *Client) callAPI(ctx context.Context, r *request, opts ...RequestOption)
 
 	if res.StatusCode >= http.StatusBadRequest {
 		apiErr := new(APIError)
+		apiErr.Status = res.StatusCode
+		c.debug("Error response body: %s", string(data))
+		// TODO обработать ошибку StatusNotFound
+		if res.StatusCode == http.StatusNotFound {
+			return []byte{}, ErrNotFound
+		}
+
 		e := json.Unmarshal(data, apiErr)
 		if e != nil {
 			c.debug("failed to unmarshal json: %s", e)
@@ -182,8 +196,13 @@ type APIError struct {
 	Code        string `json:"code"`
 	Message     string `json:"message"`
 	OrderNumber string `json:"orderNumber"`
+	Status      int    `json:"-"` // статус HTTP ответа
 }
 
 func (e APIError) Error() string {
 	return fmt.Sprintf("<APIError> code=%s, msg=%s", e.Code, e.Message)
+}
+
+func (e APIError) HTTPStatus() int {
+	return e.Status
 }

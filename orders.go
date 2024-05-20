@@ -133,7 +133,7 @@ func (s *CreateOrderService) Do(ctx context.Context) (string, error) {
 
 	// в request.body надо записать order
 	buf := new(bytes.Buffer)
-	json.NewEncoder(buf).Encode(&s.order)
+	_ = json.NewEncoder(buf).Encode(&s.order)
 	r.body = buf
 
 	// "X-ALOR-REQID"
@@ -209,17 +209,6 @@ type Order struct {
 	//Iceberg // Специальные поля для сделок со скрытой частью
 }
 
-type User struct {
-	Portfolio string `json:"portfolio"`
-}
-
-type Instrument struct {
-	Symbol          string `json:"symbol"`
-	Exchange        string `json:"exchange"`
-	InstrumentGroup string `json:"instrumentGroup,omitempty"`
-	//InstrumentGroup string `json:"instrumentGroup"`
-}
-
 type OrderRequest struct {
 	OrderType       OrderType   `json:"-"`
 	Side            SideType    `json:"side"`                      // Направление сделки: buy — Купля sell — Продажа
@@ -239,13 +228,13 @@ type CreateOrderService struct {
 	order OrderRequest
 }
 
-// SetSide установим направление ордера
+// Side установим направление ордера
 func (s *CreateOrderService) Side(side SideType) *CreateOrderService {
 	s.order.Side = side
 	return s
 }
 
-// SetComment установим комментарий
+// Comment установим комментарий
 func (s *CreateOrderService) Comment(comment string) *CreateOrderService {
 	s.order.Comment = comment
 	return s
@@ -287,7 +276,7 @@ func (s *CreateOrderService) Portfolio(portfolio string) *CreateOrderService {
 	return s
 }
 
-// Portfolio установим тип заявки
+// OrderType установим тип заявки
 func (s *CreateOrderService) OrderType(orderType OrderType) *CreateOrderService {
 	s.order.OrderType = orderType
 	return s

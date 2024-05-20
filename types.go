@@ -1,10 +1,14 @@
 package alor
 
-/*
+type User struct {
+	Portfolio string `json:"portfolio"`
+}
 
-positions[https://alor.dev/rawdocs2/WarpOpenAPIv2.yml#/components/schemas/positionposition
-
-*/
+type Instrument struct {
+	Symbol          string `json:"symbol"`
+	Exchange        string `json:"exchange"`
+	InstrumentGroup string `json:"instrumentGroup,omitempty"`
+}
 
 // Interval период свечей
 type Interval string
@@ -21,7 +25,7 @@ const (
 
 )
 
-// направление сдели ( BUY SELL )
+// направление сдели ( buy sell)
 type SideType string
 
 const (
@@ -29,14 +33,17 @@ const (
 	SideTypeSell SideType = "sell"
 )
 
+// OrderType Тип заявки (limit market stop stopLimit)
 type OrderType string
 
 const (
-	OrderTypeLimit  OrderType = "limit"
-	OrderTypeMarket OrderType = "market"
+	OrderTypeLimit     OrderType = "limit"     // Лимитная заявка
+	OrderTypeMarket    OrderType = "market"    // Рыночная заявка
+	OrderTypeStop      OrderType = "stop"      // Стоп-заявка
+	OrderTypeStopLimit OrderType = "stopLimit" // Стоп-лимитная заявка
 )
 
-// OrderStatus статус заявки ( New Filled Canceled Rejected )
+// OrderStatus статус заявки ( working filled canceled rejected)
 type OrderStatus string
 
 const (
@@ -47,12 +54,22 @@ const (
 
 )
 
-// условие по времени действия заявки
+// TimeInForce условие по времени действия заявки
 type TimeInForce string
 
-var (
+const (
 	TimeInForceGTC    TimeInForce = "goodtillcancelled" // Активна до отмены
 	TimeInForceDAY    TimeInForce = "oneday"            // До конца дня
 	TimeInForceFOK    TimeInForce = "fillorkill"        // Исполнить целиком или отклонить
 	TimeInForceCancel TimeInForce = "immediateorcancel" // Снять остаток
+)
+
+// ConditionType Условие срабатывания стоп/стоп-лимитной заявки
+type ConditionType string
+
+const (
+	ConditionMore        ConditionType = "More"        // Цена срабатывания больше текущей цены
+	ConditionLess        ConditionType = "Less"        // Цена срабатывания меньше текущей цены
+	ConditionMoreOrEqual ConditionType = "MoreOrEqual" // Цена срабатывания больше или равна текущей цене
+	ConditionLessOrEqual ConditionType = "LessOrEqual" // Цена срабатывания меньше или равна текущей цене
 )

@@ -1,6 +1,7 @@
 # Golang SDK для работы с функционалом [Alor OpenAPI V2](https://alor.dev/docs) брокера [Алор](https://www.alorbroker.ru)
 
-
+  
+**Внимание: проект находится в процессе разработки. Сигнатура методов могут быть изменена** 
 
 
 ## Установка
@@ -29,6 +30,9 @@ GetQuote(ctx context.Context, symbol string) (Quote, error)
 
 // GetPositions получение информации о позициях
 GetPositions(ctx context.Context, portfolio string) ([]Position, error)
+
+// GetPosition Получение информации о позициях выбранного инструмента
+GetPosition(ctx context.Context, portfolio, symbol string) (Position, bool, error)
 
 // GetHistory Запрос истории для выбранных биржи и инструмента
 GetHistory(ctx context.Context, symbol string, interval Interval, from, to int64) (History, error)

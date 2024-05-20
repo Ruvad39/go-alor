@@ -3,6 +3,7 @@ package alor
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 	"path"
@@ -10,16 +11,15 @@ import (
 
 /*
 /md/v2/Clients/{exchange}/{portfolio}/summary Получение информации о портфеле
-GET "https://apidev.alor.ru/md/v2/Clients/MOEX/D39004/summary?format=Simple"
-
 /md/v2/Clients/{exchange}/{portfolio}/positions Получение информации о позициях
-withoutCurrency=true Исключить из ответа все денежные инструменты
-https://apidev.alor.ru/md/v2/Clients/MOEX/D39004/positions?format=Simple&withoutCurrency=false
-return positions
-
 /md/v2/Clients/{exchange}/{portfolio}/positions/{symbol} Получение информации о позициях выбранного инструмента
-https://apidev.alor.ru/md/v2/Clients/MOEX/D39004/positions/LKOH?format=Simple
-return position
+
+TODO информации о сделках
+/md/v2/Clients/{exchange}/{portfolio}/trades Получение информации о сделках  (только за текущую торговую сессию)
+/md/v2/Clients/{exchange}/{portfolio}/{symbol}/trades
+
+/md/v2/Stats/{exchange}/{portfolio}/history/trades Запрос списка сделок за предыдущие дни (не более 1000 сделок за один запрос)
+https://apidev.alor.ru/md/v2/Stats/MOEX/D39004/history/trades?dateFrom=2024-04-10&ticker=SBER&from=93713183&limit=50&side=buy&format=Simple
 
 */
 
@@ -44,6 +44,7 @@ func (c *Client) GetPortfolio(ctx context.Context, portfolio string) (Portfolio,
 }
 
 // GetPositions получение информации о позициях
+// TODO использовать паттерн ok ([]Position, bool, error) ?
 func (c *Client) GetPositions(ctx context.Context, portfolio string) ([]Position, error) {
 	queryURL, _ := url.Parse("/md/v2/Clients")
 	queryURL.Path = path.Join(queryURL.Path, c.Exchange, portfolio, "positions")
@@ -64,7 +65,9 @@ func (c *Client) GetPositions(ctx context.Context, portfolio string) ([]Position
 }
 
 // Получение информации о позициях выбранного инструмента
-func (c *Client) GetPosition(ctx context.Context, portfolio, symbol string) (Position, error) {
+// TODO использовать паттерн ok (Position, bool, error) ?
+// для этого нужно правильно обраьатывать ошибку
+func (c *Client) GetPosition(ctx context.Context, portfolio, symbol string) (Position, bool, error) {
 	queryURL, _ := url.Parse("/md/v2/Clients")
 	queryURL.Path = path.Join(queryURL.Path, c.Exchange, portfolio, "positions", symbol)
 	r := &request{
@@ -74,17 +77,22 @@ func (c *Client) GetPosition(ctx context.Context, portfolio, symbol string) (Pos
 	result := Position{}
 	data, err := c.callAPI(ctx, r)
 	if err != nil {
-		return result, err
+		// если ошибка "NotFound"
+		if errors.Is(err, ErrNotFound) {
+			return result, false, nil
+		}
+		return result, false, err
 	}
 	err = json.Unmarshal(data, &result)
 	if err != nil {
-		return result, err
+		return result, false, err
 	}
-	return result, nil
+	return result, true, nil
 }
 
 // https://apidev.alor.ru/md/v2/Clients/P039004/positions?format=Simple
 // GetLoginPositions Получение информации о позициях по логину
+// TODO использовать паттерн ok ([]Position, bool, error) ?
 func (c *Client) GetLoginPositions(ctx context.Context, login string) ([]Position, error) {
 	queryURL, _ := url.Parse("/md/v2/Clients")
 	queryURL.Path = path.Join(queryURL.Path, login, "positions")

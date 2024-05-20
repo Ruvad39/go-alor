@@ -27,6 +27,9 @@ type IAlorClient interface {
 	// GetPositions получение информации о позициях
 	GetPositions(ctx context.Context, portfolio string) ([]Position, error)
 
+	// GetPosition Получение информации о позициях выбранного инструмента
+	GetPosition(ctx context.Context, portfolio, symbol string) (Position, bool, error)
+
 	// GetHistory Запрос истории для выбранных биржи и инструмента
 	GetHistory(ctx context.Context, symbol string, interval Interval, from, to int64) (History, error)
 
