@@ -24,7 +24,7 @@ func main() {
 
 	// создание клиента
 	client := alor.NewClient(refreshToken)
-	client.Debug = true
+	//client.SetLogDebug(true)
 
 	// получить параметры по торговому инструменту
 	board := "" // "TQBR"

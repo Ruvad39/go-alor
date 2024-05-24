@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"path"
@@ -88,7 +89,7 @@ func (c *Client) CancelOrder(ctx context.Context, portfolio, orderId string) (bo
 		//return result, err
 		return false, err
 	}
-	c.debug("CancelOrder response body: %s", string(data))
+	log.Debug("CancelOrder", slog.Any("response body", string(data)))
 	//err = json.Unmarshal(data, &result)
 	//if err != nil {
 	//	return false, err
@@ -150,7 +151,7 @@ func (s *CreateOrderService) Do(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	s.c.debug("SendOrder response body: %s", string(data))
+	log.Debug("SendOrder", slog.Any("response body", string(data)))
 	err = json.Unmarshal(data, &result)
 	if err != nil {
 		return "", err

@@ -20,8 +20,8 @@ import (
 	то в теле ответа в поле AccessToken вернётся свежий JWT токен.
 
 */
-
-const jwtTokenTtl = 60 // Время жизни токена JWT в секундах
+//  Срок действия access токена составляет 30 минут. Ограничим 25 минут
+const jwtTokenTtl = 25 // Время жизни токена JWT в минутах
 
 type JSResp struct {
 	AccessToken string
@@ -41,8 +41,8 @@ func (c *Client) GetJWT() error {
 
 	}
 	//c.debug("GetJWT Формируем новый токен")
-
-	queryURL, _ := url.Parse(c.OauthURL)
+	endPoint := getOauthEndPoint()
+	queryURL, _ := url.Parse(endPoint)
 	queryURL.Path = path.Join(queryURL.Path, "refresh")
 
 	q := queryURL.Query()
@@ -59,11 +59,14 @@ func (c *Client) GetJWT() error {
 	if err != nil {
 		return err
 	}
+
 	if res.StatusCode != http.StatusOK {
+		//data, _ := io.ReadAll(res.Body)
+		//c.debug("response body: %s", string(data))
 		return fmt.Errorf("ошибка получения JWT токена: статус %d", res.StatusCode)
 
 	}
-	//defer res.Body.Close()
+
 	defer func() {
 		cerr := res.Body.Close()
 		// Only overwrite the retured error if the original error was nil and an
@@ -74,7 +77,8 @@ func (c *Client) GetJWT() error {
 	}()
 
 	data, err := io.ReadAll(res.Body)
-	//data, err := c.callAPI(ctx, r)
+	//c.debug("response body: %s", string(data))
+
 	if err != nil {
 		c.accessToken = ""
 		return err
@@ -85,7 +89,7 @@ func (c *Client) GetJWT() error {
 		//c.debug("error  %s", err.Error())
 		return err
 	}
-	c.cancelTimeToken = time.Now().Add(jwtTokenTtl * time.Second)
+	c.cancelTimeToken = time.Now().Add(jwtTokenTtl * time.Minute)
 	c.accessToken = result.AccessToken
 
 	return nil

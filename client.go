@@ -6,24 +6,38 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 )
 
-// Endpoints
 const (
 	libraryName    = "ALOR API GO"
 	libraryVersion = "0.0.3"
-	apiProdURL     = "https://api.alor.ru"    // Боевой контур
-	apiDevURL      = "https://apidev.alor.ru" // Тестовый контур
-	oauthProdURL   = "https://oauth.alor.ru"
-	oauthDevURL    = "https://oauthdev.alor.ru"
+)
+
+// Endpoints
+const (
+	apiProdURL   = "https://api.alor.ru"      // Боевой контур
+	apiDevURL    = "https://apidev.alor.ru"   // Тестовый контур
+	oauthProdURL = "https://oauth.alor.ru"    // Боевой контур авторизации
+	oauthDevURL  = "https://oauthdev.alor.ru" // Тестовый контур авторизации
+	wssDevURL    = "wss://apidev.alor.ru/ws"  // Тестовый контур wss
+	wssProdURL   = "wss://api.alor.ru/ws"     // Боевой контур wss
 )
 
 var ErrNotFound = errors.New("404 Not Found")
+
+var logLevel = &slog.LevelVar{} // INFO
+var log = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	Level: logLevel,
+})).With(slog.String("package", "go-alor"))
+
+func SetLogger(logger *slog.Logger) {
+	log = logger
+}
 
 //const (
 //	ErrNotFound = "404 Not Found"
@@ -33,25 +47,36 @@ var ErrNotFound = errors.New("404 Not Found")
 var UseDevelop = false
 
 // getAPIEndpoint return the base endpoint of the Rest API according the UseDevelop flag
-func getAPIEndpoint() (string, string) {
+func getAPIEndpoint() string {
 	if UseDevelop {
-		return apiDevURL, oauthDevURL
+		return apiDevURL
 	}
-	return apiProdURL, oauthProdURL
+	return apiProdURL
+}
+
+func getOauthEndPoint() string {
+	if UseDevelop {
+		return oauthDevURL
+	}
+	return oauthProdURL
+}
+
+func getWsEndpoint() string {
+	if UseDevelop {
+		return wssDevURL
+	}
+	return wssProdURL
 }
 
 // NewClient создание нового клиента
 func NewClient(token string) *Client {
-	apidURL, oauthURL := getAPIEndpoint()
+	//Log.Info("NewClient")
 	return &Client{
 		refreshToken: token,
 		//Portfolio:    portfolio,
-		ApiURL:     apidURL,
-		OauthURL:   oauthURL,
 		Exchange:   "MOEX", // по умолчанию работаем с биржей MOEX
-		UserAgent:  "Alor/golang",
 		HTTPClient: http.DefaultClient,
-		Logger:     log.New(os.Stderr, "go-alor ", log.LstdFlags),
+		//Logger:     log.New(os.Stderr, "go-alor ", log.LstdFlags),
 	}
 }
 
@@ -62,21 +87,20 @@ type Client struct {
 	accessToken     string    // JWT токен для дальнейшей авторизации
 	cancelTimeToken time.Time // Время завершения действия JWT токена
 	Exchange        string    // С какой биржей работаем по умолчанию
-	ApiURL          string
-	OauthURL        string
-	UserAgent       string
 	HTTPClient      *http.Client
-	Debug           bool
-	Logger          *log.Logger
-	TimeOffset      int64
+	Stream
 }
 
-func (c *Client) debug(format string, v ...interface{}) {
-	if c.Debug {
-		c.Logger.Printf(format, v...)
+// SetLogDebug установим уровень логгирования Debug
+func (c *Client) SetLogDebug(debug bool) {
+	if debug {
+		logLevel.Set(slog.LevelDebug)
+		//log.Debug("установлен уровень Debug")
+	} else {
+		logLevel.Set(slog.LevelInfo)
 	}
-}
 
+}
 func (c *Client) parseRequest(r *request, opts ...RequestOption) (err error) {
 	// set request options from user
 	for _, opt := range opts {
@@ -85,7 +109,8 @@ func (c *Client) parseRequest(r *request, opts ...RequestOption) (err error) {
 
 	err = c.GetJWT()
 	if err != nil {
-		c.debug("error  %s", err.Error())
+		log.Debug("parseRequest GetJWT", "error", err.Error())
+		//c.debug("error  %s", err.Error())
 		return err
 	}
 
@@ -105,8 +130,8 @@ func (c *Client) parseRequest(r *request, opts ...RequestOption) (err error) {
 	if c.accessToken != "" {
 		header.Set("Authorization", "Bearer "+c.accessToken)
 	}
-
-	fullURL := fmt.Sprintf("%s%s", c.ApiURL, r.endpoint)
+	endPoint := getAPIEndpoint()
+	fullURL := fmt.Sprintf("%s%s", endPoint, r.endpoint)
 	// только если ранее мы не заполнили полный путь
 	if r.fullURL == "" {
 
@@ -115,8 +140,8 @@ func (c *Client) parseRequest(r *request, opts ...RequestOption) (err error) {
 		}
 		r.fullURL = fullURL
 	}
-	//c.debug("full url: %s, body: %s", r.fullURL, bodyString)
-	c.debug("full url: %s, body: %s", r.fullURL, r.body)
+	//c.debug("full url: %s, body: %s", r.fullURL, r.body)
+	log.Debug("parseRequest", "url", r.fullURL, slog.Any("body", r.body))
 
 	r.header = header
 	//r.body = body
@@ -134,13 +159,13 @@ func (c *Client) callAPI(ctx context.Context, r *request, opts ...RequestOption)
 	}
 	req = req.WithContext(ctx)
 	req.Header = r.header
-	c.debug("request: %#v", req)
+	//c.debug("request: %#v", req)
+	log.Debug("callAPI", slog.Any("request", req))
 
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return []byte{}, err
 	}
-	//data, err = ioutil.ReadAll(res.Body)
 	data, err = io.ReadAll(res.Body)
 	if err != nil {
 		return []byte{}, err
@@ -156,27 +181,31 @@ func (c *Client) callAPI(ctx context.Context, r *request, opts ...RequestOption)
 
 	//c.debug("response: %#v", res)
 	//c.debug("response body: %s", string(data))
-	c.debug("response status code: %d", res.StatusCode)
+	//c.debug("response status code: %d", res.StatusCode)
+	//Log.Debug("callAPI", "status code", res.StatusCode, slog.Any("body", res.Body))
+	log.Debug("callAPI", "status code", res.StatusCode)
 	//c.debug("debug: GET %s -> %d", r.fullURL, res.StatusCode)
 
 	if res.StatusCode >= http.StatusBadRequest {
 		apiErr := new(APIError)
 		apiErr.Status = res.StatusCode
-		c.debug("Error response body: %s", string(data))
+		//c.debug("Error response body: %s", string(data))
+		log.Error("callAPI", "Error response body", res.StatusCode, slog.Any("data", data))
 		// TODO обработать ошибку StatusNotFound
 		if res.StatusCode == http.StatusNotFound {
 			return []byte{}, ErrNotFound
 		}
 
-		e := json.Unmarshal(data, apiErr)
-		if e != nil {
-			c.debug("failed to unmarshal json: %s", e)
+		err := json.Unmarshal(data, apiErr)
+		if err != nil {
+			//c.debug("failed to unmarshal json: %s", e)
+			log.Error("callAPI json.Unmarshal", "err", err.Error())
 			apiErr.Code = strconv.Itoa(res.StatusCode)
 			apiErr.Message = http.StatusText(res.StatusCode)
 		}
 		return nil, apiErr
 		//c.debug("Erorr response body: %s", string(data))
-		//return nil, fmt.Errorf("error HTTP %d: %s", res.StatusCode, http.StatusText(res.StatusCode))
+
 	}
 	return data, nil
 }

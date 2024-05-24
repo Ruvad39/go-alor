@@ -15,6 +15,10 @@ func init() {
 		slog.Info("No .env file found")
 		//slog.Error(err.Error())
 	}
+	//handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	//	Level: slog.LevelDebug,
+	//})
+	//slog.SetDefault(slog.New(handler))
 }
 
 func main() {
@@ -24,7 +28,7 @@ func main() {
 
 	// создание клиента
 	client := alor.NewClient(refreshToken)
-	client.Debug = true
+	client.SetLogDebug(true)
 
 	// Получение информации о котировках для выбранных инструментов.
 	// Принимает несколько пар биржа-тикер. Пары отделены запятыми. Биржа и тикер разделены двоеточием

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"time"
 )
 
 //func (c *Client) GetCandles(ctx context.Context, login string) ([]Position, error) {
@@ -41,35 +40,4 @@ func (c *Client) GetHistory(ctx context.Context, symbol string, interval Interva
 func (c *Client) GetCandles(ctx context.Context, symbol string, interval Interval, from, to int64) ([]Candle, error) {
 	history, err := c.GetHistory(ctx, symbol, interval, from, to)
 	return history.Candles, err
-}
-
-// Candle Параметры свечи
-type Candle struct {
-	Time   int64   `json:"time"`   // Время (UTC) (Unix time seconds)
-	Close  float64 `json:"close"`  // Цена при закрытии
-	Open   float64 `json:"open"`   // Цена при открытии
-	High   float64 `json:"high"`   // Максимальная цена
-	Low    float64 `json:"low"`    // Минимальная цена
-	Volume int32   `json:"volume"` // Объём
-}
-
-// GeTime вернем время начала свечи в формате time.Time
-func (k *Candle) GeTime() time.Time {
-	return time.Unix(k.Time, 0)
-}
-
-type History struct {
-	Candles []Candle `json:"history"` // Данные по свечам
-	Next    int64    `json:"next"`    // Время (UTC) начала следующей свечи
-	Prev    int64    `json:"prev"`    // Время (UTC) начала предыдущей свечи
-}
-
-// GeNextTime вернем время начала следующей свечи в формате time.Time
-func (k *History) GeNextTime() time.Time {
-	return time.Unix(k.Next, 0)
-}
-
-// GePrevTime вернем время начала предыдущей свечи в формате time.Time
-func (k *History) GePrevTime() time.Time {
-	return time.Unix(k.Prev, 0)
 }

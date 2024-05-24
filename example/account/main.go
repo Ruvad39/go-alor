@@ -24,7 +24,7 @@ func main() {
 
 	// создание клиента
 	client := alor.NewClient(refreshToken)
-	client.Debug = true
+	//client.SetLogDebug(true)
 
 	// Получение информации о портфеле
 	portfolio := "D88833" // номер счета (срочный)

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 )
 
@@ -190,7 +191,8 @@ func (s *CreateOrderStopService) Do(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	s.c.debug("SendOrder response body: %s", string(data))
+
+	log.Debug("SendOrder", slog.Any("response body", string(data)))
 	err = json.Unmarshal(data, &result)
 	if err != nil {
 		return "", err

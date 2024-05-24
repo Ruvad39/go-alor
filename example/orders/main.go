@@ -23,7 +23,7 @@ func main() {
 
 	// создание клиента
 	client := alor.NewClient(refreshToken)
-	client.Debug = true
+	//client.SetLogDebug(true)
 
 	// Получение информации о заявках (ордерах)
 	portfolio := "D88833" // номер счета (spot)

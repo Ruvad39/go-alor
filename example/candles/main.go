@@ -25,7 +25,7 @@ func main() {
 
 	// создание клиента
 	client := alor.NewClient(refreshToken)
-	client.Debug = true
+	//client.SetLogDebug(true)
 
 	// получить список свечей по инструменту
 	timeFrom, _ := time.Parse("2006-01-02", "2024-05-14")
@@ -56,6 +56,7 @@ func main() {
 			"row", n,
 			"Time", candle.GeTime(),
 			"close", candle.Close,
+			//slog.Any("candle", candle),
 		)
 	}
 

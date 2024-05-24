@@ -1,7 +1,7 @@
 # Golang SDK для работы с функционалом [Alor OpenAPI V2](https://alor.dev/docs) брокера [Алор](https://www.alorbroker.ru)
 
   
-**Внимание: проект находится в процессе разработки. Сигнатура методов могут быть изменена** 
+**Внимание: проект находится в процессе разработки. Сигнатура методов может быть изменена** 
 
 
 ## Установка
@@ -63,6 +63,9 @@ BuyLimit(ctx context.Context, symbol string, lot int32, price float64, comment s
 
 // SellLimit лимитная продажа
 SellLimit(ctx context.Context, symbol string, lot int32, price float64, comment string) (string, error)
+
+// SubscribeCandles подписка на свечи
+SubscribeCandles(ctx context.Context, symbol string, interval Interval) error
 
 ```
 ## Примеры
@@ -175,8 +178,7 @@ bid, _ := orderbook.BestBid()
 ask, _ := orderbook.BestAsk()
 slog.Info("orderbook", "BestBid()", bid.Price, "BestAsk()", ask.Price)
 
-
-
 ```
+
 
 ### другие примеры смотрите [тут](/example)
