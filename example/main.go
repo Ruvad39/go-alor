@@ -71,7 +71,8 @@ func main() {
 
 	// через создание сервиса
 	//err := client.NewWSCandleService().Symbol("SBER").Interval(alor.Interval_M1).Do2(ctx)
-	err := client.NewWSCandleService("SBER", alor.Interval_M1).Do(ctx)
+	//err := client.NewWSCandleService("SBER", alor.Interval_M1).Do(ctx)
+	err := client.SubscribeCandles(ctx, "SBER", alor.Interval_M1)
 	if err != nil {
 		slog.Error("main.NewWSCandleService", "err", err.Error())
 		return

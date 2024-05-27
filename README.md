@@ -10,7 +10,6 @@
 go get github.com/Ruvad39/go-alor
 ```
 
-**без авторизации задержка по времени 15 минут**
 ## какой api реализован 
 ```go
 	// GetTime текущее время сервера
@@ -65,7 +64,11 @@ BuyLimit(ctx context.Context, symbol string, lot int32, price float64, comment s
 SellLimit(ctx context.Context, symbol string, lot int32, price float64, comment string) (string, error)
 
 // SubscribeCandles подписка на свечи
-SubscribeCandles(ctx context.Context, symbol string, interval Interval) error
+SubscribeCandles(ctx context.Context, symbol string, interval Interval, opts ...WSRequestOption) error
+
+// SubscribeQuotes подписка на котировки
+SubscribeQuotes(ctx context.Context, symbol string, opts ...WSRequestOption) error
+
 
 ```
 ## Примеры

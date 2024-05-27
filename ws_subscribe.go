@@ -1,0 +1,42 @@
+package alor
+
+import "context"
+
+// SubscribeCandles подписка на свечи
+func (c *Client) SubscribeCandles(ctx context.Context, symbol string, interval Interval, opts ...WSRequestOption) error {
+	r := &WSRequestBase{
+		OpCode:      OnCandleSubscribe,
+		Code:        symbol,
+		Interval:    interval,
+		SkipHistory: true,
+		Exchange:    c.Exchange,
+		Frequency:   1000, //  По умолчанию обновление в 1сек (1000 мс)
+	}
+	// обрабратаем входящие параметры
+	for _, opt := range opts {
+		opt(r)
+	}
+	r.Guid = "candle|" + r.Code + "|" + r.Interval.String()
+
+	s := c.NewWsService(r)
+	return s.Do(ctx)
+}
+
+// SubscribeQuotes подписка на котировки
+func (c *Client) SubscribeQuotes(ctx context.Context, symbol string, opts ...WSRequestOption) error {
+	r := &WSRequestBase{
+		OpCode:    onQuotesSubscribe,
+		Code:      symbol,
+		Exchange:  c.Exchange,
+		Frequency: 175, //  По умолчанию 175 Минимальное значение параметра зависит от выбранного формата возвращаемого JSON-объекта: Slim — 10 миллисекунд
+	}
+	// обрабратаем входящие параметры
+	for _, opt := range opts {
+		opt(r)
+	}
+	// TODO создать метод создания guid
+	r.Guid = "quote|" + r.Code
+
+	s := c.NewWsService(r)
+	return s.Do(ctx)
+}

@@ -28,21 +28,18 @@ type JSResp struct {
 }
 
 // GetJWT получим accessToken
-// TODO определять время работы токена
-func (c *Client) GetJWT() error {
+func (c *Client) GetJWT() (string, error) {
 	if c.refreshToken == "" {
 		c.accessToken = ""
-		return nil
+		return c.accessToken, nil
 	}
 	// если не пустой токен и время окончания токена больше текущего время
 	if c.accessToken != "" && c.cancelTimeToken.After(time.Now()) {
 		//c.debug("GetJWT Не надо формировать новый токен")
-		return nil
+		return c.accessToken, nil
 
 	}
-	//c.debug("GetJWT Формируем новый токен")
-	endPoint := getOauthEndPoint()
-	queryURL, _ := url.Parse(endPoint)
+	queryURL, _ := url.Parse(getOauthEndPoint())
 	queryURL.Path = path.Join(queryURL.Path, "refresh")
 
 	q := queryURL.Query()
@@ -53,18 +50,15 @@ func (c *Client) GetJWT() error {
 	//c.debug("full url: %s", queryURL.String())
 	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
 	if err != nil {
-		return err
+		return "", fmt.Errorf("ошибка получения JWT токена: %w", err)
 	}
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return err
+		return "", fmt.Errorf("ошибка получения JWT токена: %w", err)
 	}
 
 	if res.StatusCode != http.StatusOK {
-		//data, _ := io.ReadAll(res.Body)
-		//c.debug("response body: %s", string(data))
-		return fmt.Errorf("ошибка получения JWT токена: статус %d", res.StatusCode)
-
+		return "", fmt.Errorf("ошибка получения JWT токена: статус %d", res.StatusCode)
 	}
 
 	defer func() {
@@ -77,21 +71,19 @@ func (c *Client) GetJWT() error {
 	}()
 
 	data, err := io.ReadAll(res.Body)
-	//c.debug("response body: %s", string(data))
-
 	if err != nil {
 		c.accessToken = ""
-		return err
+		return c.accessToken, fmt.Errorf("ошибка получения JWT токена: %w", err)
 	}
 	var result JSResp
 	err = json.Unmarshal(data, &result)
 	if err != nil {
 		//c.debug("error  %s", err.Error())
-		return err
+		return c.accessToken, fmt.Errorf("ошибка получения JWT токена: %w", err)
 	}
 	c.cancelTimeToken = time.Now().Add(jwtTokenTtl * time.Minute)
 	c.accessToken = result.AccessToken
 
-	return nil
+	return c.accessToken, nil
 
 }

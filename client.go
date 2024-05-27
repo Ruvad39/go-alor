@@ -43,26 +43,26 @@ func SetLogger(logger *slog.Logger) {
 //	ErrNotFound = "404 Not Found"
 //)
 
-// UseDevelop использовать тестовый или боевой сервер
-var UseDevelop = false
+// demoServer использовать тестовый или боевой сервер
+var demoServer = false
 
 // getAPIEndpoint return the base endpoint of the Rest API according the UseDevelop flag
 func getAPIEndpoint() string {
-	if UseDevelop {
+	if demoServer {
 		return apiDevURL
 	}
 	return apiProdURL
 }
 
 func getOauthEndPoint() string {
-	if UseDevelop {
+	if demoServer {
 		return oauthDevURL
 	}
 	return oauthProdURL
 }
 
 func getWsEndpoint() string {
-	if UseDevelop {
+	if demoServer {
 		return wssDevURL
 	}
 	return wssProdURL
@@ -107,7 +107,7 @@ func (c *Client) parseRequest(r *request, opts ...RequestOption) (err error) {
 		opt(r)
 	}
 
-	err = c.GetJWT()
+	_, err = c.GetJWT()
 	if err != nil {
 		log.Debug("parseRequest GetJWT", "error", err.Error())
 		//c.debug("error  %s", err.Error())

@@ -30,33 +30,65 @@ func main() {
 
 	// создание клиента
 	client := alor.NewClient(refreshToken)
-	client.SetLogDebug(true)
+	//client.SetLogDebug(true)
 
 	// добавим коллбек на событие появление новой свечи
 	client.OnCandleClosed(func(candle alor.Candle) {
 		onCandle(candle)
 	})
 
+	// добавим коллбек на котировки
+	client.OnQuotes(func(quote alor.Quote) {
+		onTick(quote)
+	})
+
 	// подписка на свечи
-	// через создание сервиса
-	err := client.NewWSCandleService("AFKS", alor.Interval_M1).Do(ctx)
+
+	err := client.SubscribeCandles(ctx, "SBRF-6.24", alor.Interval_M1, alor.WithFrequency(500))
 	if err != nil {
-		slog.Error("main.NewWSCandleService", "err", err.Error())
+		slog.Error("SubscribeCandles2", "err", err.Error())
 		return
 	}
 
-	// через метод
-	err = client.SubscribeCandles(ctx, "CNY-6.24", alor.Interval_M1)
+	// Котировки
+	err = client.SubscribeQuotes(ctx, "SBRF-6.24")
 	if err != nil {
-		slog.Error("main.NewWSCandleService", "err", err.Error())
+		slog.Error("SubscribeQuotes", "err", err.Error())
 		return
 	}
 
+	//----------------------------------
 	// ожидание сигнала о закрытие
 	waitForSignal(ctx, syscall.SIGINT, syscall.SIGTERM)
 	cancel()
 
 	slog.Info("exiting...")
+}
+
+// сюда приходят данные по закрытым свечам
+func onCandle(candle alor.Candle) {
+	slog.Info("onCandle ",
+		"symbol", candle.Symbol,
+		"tf", candle.Interval.String(),
+		"time", candle.GeTime().String(),
+		"open", candle.Open,
+		"high", candle.High,
+		"low", candle.Low,
+		"close", candle.Close,
+		"volume", candle.Volume,
+	)
+}
+
+func onTick(quote alor.Quote) {
+	slog.Info("onTick",
+		"symbol", quote.Symbol,
+		"time", quote.LastTime().String(),
+		"Bid", quote.Bid,
+		"Ask", quote.Ask,
+		"LastPrice", quote.LastPrice,
+		"OpenInterest", quote.OpenInterest,
+		"ChangePercent", quote.ChangePercent,
+	)
 }
 
 // waitForSignal Ожидание сигнала о закрытие
@@ -74,18 +106,4 @@ func waitForSignal(ctx context.Context, signals ...os.Signal) os.Signal {
 	}
 
 	return nil
-}
-
-// сюда приходят данные по закрытым свечам
-func onCandle(candle alor.Candle) {
-	slog.Info("onCandle ",
-		"symbol", candle.Symbol,
-		"tf", candle.Interval.String(),
-		"time", candle.GeTime().String(),
-		"open", candle.Open,
-		"high", candle.High,
-		"low", candle.Low,
-		"close", candle.Close,
-		"volume", candle.Volume,
-	)
 }

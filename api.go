@@ -64,7 +64,10 @@ type IAlorClient interface {
 	CancelOrder(ctx context.Context, portfolio, orderId string) (bool, error)
 
 	// SubscribeCandles подписка на свечи
-	SubscribeCandles(ctx context.Context, symbol string, interval Interval) error
+	SubscribeCandles(ctx context.Context, symbol string, interval Interval, opts ...WSRequestOption) error
+
+	// SubscribeQuotes подписка на котировки
+	SubscribeQuotes(ctx context.Context, symbol string, opts ...WSRequestOption) error
 }
 
 // GetTime
