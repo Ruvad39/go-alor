@@ -26,6 +26,15 @@ func main() {
 	client := alor.NewClient(refreshToken)
 	//client.SetLogDebug(true)
 
+	// test GetJWTNEW
+	//tt, err := client.GetJWT()
+	//if err != nil {
+	//	slog.Info("GetJWT_NEW", "err", err.Error())
+	//	return
+	//}
+	//slog.Info("GetJWT_NEW", "token", tt)
+	//return
+
 	// Получение информации о портфеле
 	portfolio := "D88833" // номер счета (срочный)
 	p, err := client.GetPortfolio(ctx, portfolio)

@@ -106,14 +106,6 @@ func (c *Client) parseRequest(r *request, opts ...RequestOption) (err error) {
 	for _, opt := range opts {
 		opt(r)
 	}
-
-	_, err = c.GetJWT()
-	if err != nil {
-		log.Debug("parseRequest GetJWT", "error", err.Error())
-		//c.debug("error  %s", err.Error())
-		return err
-	}
-
 	err = r.validate()
 	if err != nil {
 		return err
@@ -127,14 +119,28 @@ func (c *Client) parseRequest(r *request, opts ...RequestOption) (err error) {
 		header = r.header.Clone()
 	}
 
-	if c.accessToken != "" {
-		header.Set("Authorization", "Bearer "+c.accessToken)
+	// если запрос нужно делать с авторизацией (по умолчанию)
+	if !r.notAuthorization {
+		// получим токен авторизации
+		_, err = c.GetJWT()
+		if err != nil {
+			log.Debug("parseRequest GetJWT", "error", err.Error())
+			return err
+		}
+		if c.accessToken != "" {
+			header.Set("Authorization", "Bearer "+c.accessToken)
+		}
 	}
-	endPoint := getAPIEndpoint()
-	fullURL := fmt.Sprintf("%s%s", endPoint, r.endpoint)
+
+	baseURL := r.baseURL
+	// если ранее не заполнили базовый путь (может быть заполнен в GetJWT())
+	if baseURL == "" {
+		baseURL = getAPIEndpoint()
+	}
+	// TODO переделать url.Parse + path.Join
+	fullURL := fmt.Sprintf("%s%s", baseURL, r.endpoint)
 	// только если ранее мы не заполнили полный путь
 	if r.fullURL == "" {
-
 		if queryString != "" {
 			fullURL = fmt.Sprintf("%s?%s", fullURL, queryString)
 		}

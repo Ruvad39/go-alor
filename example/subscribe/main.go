@@ -28,7 +28,7 @@ func main() {
 	slog.Info("start main ")
 	refreshToken, _ := os.LookupEnv("ALOR_REFRESH")
 
-	// создание клиента
+	// создание клиентапщ
 	client := alor.NewClient(refreshToken)
 	//client.SetLogDebug(true)
 

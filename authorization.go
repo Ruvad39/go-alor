@@ -1,12 +1,10 @@
 package alor
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"net/url"
-	"path"
 	"time"
 )
 
@@ -29,6 +27,43 @@ type JSResp struct {
 
 // GetJWT получим accessToken
 func (c *Client) GetJWT() (string, error) {
+	//log.Debug("зашли в НОВУЮ GetJWT")
+	if c.refreshToken == "" {
+		c.accessToken = ""
+		return c.accessToken, nil
+	}
+	// если не пустой токен и время окончания токена больше текущего время
+	if c.accessToken != "" && c.cancelTimeToken.After(time.Now()) {
+		//c.debug("GetJWT Не надо формировать новый токен")
+		return c.accessToken, nil
+
+	}
+	r := &request{
+		method:           http.MethodPost,
+		endpoint:         "/refresh",
+		notAuthorization: true, // Проставить обязательно. Иначе будет ошибка
+	}
+	r.baseURL = getOauthEndPoint()
+	r.setParam("token", c.refreshToken)
+
+	var result JSResp
+	data, err := c.callAPI(context.Background(), r)
+	if err != nil {
+		return "", fmt.Errorf("ошибка получения JWT токена: %w", err)
+	}
+	if err = json.Unmarshal(data, &result); err != nil {
+		return "", fmt.Errorf("ошибка получения JWT токена: %w", err)
+	}
+	c.cancelTimeToken = time.Now().Add(jwtTokenTtl * time.Minute)
+	c.accessToken = result.AccessToken
+
+	return c.accessToken, nil
+
+}
+
+/*
+// GetJWT получим accessToken
+func (c *Client) GetJWT_OLD() (string, error) {
 	if c.refreshToken == "" {
 		c.accessToken = ""
 		return c.accessToken, nil
@@ -87,3 +122,4 @@ func (c *Client) GetJWT() (string, error) {
 	return c.accessToken, nil
 
 }
+*/

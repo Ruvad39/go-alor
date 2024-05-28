@@ -18,7 +18,6 @@ import (
 func (c *Client) GetOrderBooks(ctx context.Context, symbol string) (OrderBook, error) {
 	queryURL, _ := url.Parse("/md/v2/orderbooks")
 	queryURL.Path = path.Join(queryURL.Path, c.Exchange, symbol)
-
 	r := &request{
 		method:   http.MethodGet,
 		endpoint: queryURL.String(),

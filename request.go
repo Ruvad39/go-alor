@@ -11,13 +11,15 @@ type params map[string]interface{}
 
 // request define an API request
 type request struct {
-	method   string
-	endpoint string
-	query    url.Values
-	form     url.Values
-	header   http.Header
-	body     io.Reader
-	fullURL  string
+	method           string
+	endpoint         string
+	query            url.Values
+	form             url.Values
+	header           http.Header
+	body             io.Reader
+	fullURL          string
+	baseURL          string
+	notAuthorization bool // Запрос нужно делать быть без авторизации
 }
 
 // addParam add param with key/value to query string
