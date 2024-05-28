@@ -8,20 +8,20 @@ type Stream struct {
 	quotesCallbacks       []func(quote Quote)   // Список (callbacks) на котировки
 }
 
-// OnCandleClosed добавим callback на появление новой свечи в список подписок
-func (s *Stream) OnCandleClosed(cb func(candle Candle)) {
+// RegisterOnCandleClosed регистрирует функцию для вызова OnCandleClosed
+func (s *Stream) RegisterOnCandleClosed(cb func(candle Candle)) {
 	s.candleClosedCallbacks = append(s.candleClosedCallbacks, cb)
 }
 
 // PublishCandleClosed пошлем данные по свече дальше = тем кто подписался
 func (s *Stream) PublishCandleClosed(candle Candle) {
-	for _, cb := range s.candleClosedCallbacks {
-		cb(candle)
+	for _, f := range s.candleClosedCallbacks {
+		f(candle)
 	}
 }
 
-// OnQuotesдобавим callback на появление новой котировки
-func (s *Stream) OnQuotes(cb func(quote Quote)) {
+// RegisterOnQuotes регистрирует функцию на появление новой котировки (OnQuotes)
+func (s *Stream) RegisterOnQuotes(cb func(quote Quote)) {
 	s.quotesCallbacks = append(s.quotesCallbacks, cb)
 }
 

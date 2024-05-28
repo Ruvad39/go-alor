@@ -33,35 +33,31 @@ func main() {
 	//client.SetLogDebug(true)
 
 	// добавим коллбек на событие появление новой свечи
-	client.OnCandleClosed(func(candle alor.Candle) {
+	client.RegisterOnCandleClosed(func(candle alor.Candle) {
 		onCandle(candle)
 	})
 
 	// добавим коллбек на котировки
-	client.OnQuotes(func(quote alor.Quote) {
+	client.RegisterOnQuotes(func(quote alor.Quote) {
 		onTick(quote)
 	})
 
 	// подписка на свечи
 
-	err := client.SubscribeCandles(ctx, "SBRF-6.24", alor.Interval_M1, alor.WithFrequency(500))
+	err := client.SubscribeCandles(ctx, "SBER", alor.Interval_M1, alor.WithFrequency(500))
 	if err != nil {
 		slog.Error("SubscribeCandles2", "err", err.Error())
 		return
 	}
 
 	// Котировки
-	//err = client.SubscribeQuotes(ctx, "Si-6.24", alor.WithFrequency(25))
-	//if err != nil {
-	//	slog.Error("SubscribeQuotes", "err", err.Error())
-	//	return
-	//}
-	err = client.SubscribeQuotes(ctx, "SBRF-6.24")
+	err = client.SubscribeQuotes(ctx, "Si-6.24", alor.WithFrequency(25))
 	if err != nil {
 		slog.Error("SubscribeQuotes", "err", err.Error())
 		return
 	}
-	//_ = client.SubscribeQuotes(ctx, "SBER")
+	_ = client.SubscribeQuotes(ctx, "SBRF-6.24")
+	_ = client.SubscribeQuotes(ctx, "SBER")
 
 	//----------------------------------
 	// ожидание сигнала о закрытие

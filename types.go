@@ -71,8 +71,23 @@ const (
 
 )
 
+var intervalName = map[Interval]string{
+	Interval_S15: "S15",
+	Interval_M1:  "M1",
+	Interval_H1:  "H1",
+	Interval_D1:  "D1",
+	Interval_W1:  "W1",
+	Interval_MN1: "MN1",
+	Interval_Y1:  "Y1",
+}
+
+//func (c ConnState) String() string {
+//	return stateName[c]
+//}
+
 func (i Interval) String() string {
-	return string(i)
+	return intervalName[i]
+	//return string(i)
 }
 
 // Candle Параметры свечи

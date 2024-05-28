@@ -34,7 +34,7 @@ func main() {
 	//}
 
 	var logger *slog.Logger = (&log.Logger{
-		//Level:      log.DebugLevel,
+		//Level: log.DebugLevel,
 		Level:      log.InfoLevel,
 		TimeField:  "time",
 		TimeFormat: "2006-01-02 15:04:05.999Z07:00",
@@ -51,7 +51,6 @@ func main() {
 	alor.SetLogger(logClient)
 
 	ctx := context.Background()
-
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
 
@@ -63,7 +62,7 @@ func main() {
 	//client.SetLogDebug(true)
 
 	// добавим коллбек на событие появление новой свечи
-	client.OnCandleClosed(func(candle alor.Candle) {
+	client.RegisterOnCandleClosed(func(candle alor.Candle) {
 		onCandle(candle)
 	})
 

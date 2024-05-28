@@ -128,7 +128,7 @@ func (s *WsService) Close() {
 
 // Reconnect в сигнальный канал рекконета пошлем сообщение
 func (s *WsService) Reconnect() {
-	log.Debug("зашли в Reconnect()")
+	log.Debug("зашли в Reconnect()", "guid", s.WsRequest.GetGuid())
 	select {
 	case s.ReconnectC <- struct{}{}:
 	default:
@@ -159,12 +159,14 @@ func (s *WsService) reconnector(ctx context.Context) {
 			return
 
 		case <-s.ReconnectC:
-			log.Warn("принят сигнал reconnect", "период восстановления повторного подключения", reconnectCoolDownPeriod)
+			log.Warn("принят сигнал reconnect",
+				"период восстановления повторного подключения", reconnectCoolDownPeriod,
+				"guid", s.WsRequest.GetGuid())
 			time.Sleep(reconnectCoolDownPeriod)
 
 			log.Warn("re-connecting...")
 			if err := s.DialAndConnect(ctx); err != nil {
-				log.Error("re-connect error, try to reconnect later")
+				log.Error("re-connect error, try to reconnect later", "guid", s.WsRequest.GetGuid())
 				// re-emit the re-connect signal if error
 				s.Reconnect()
 			}
@@ -177,13 +179,13 @@ func (s *WsService) DialAndConnect(ctx context.Context) error {
 	wssURL := getWsEndpoint()
 	conn, resp, err := websocket.DefaultDialer.Dial(wssURL, nil)
 	if err != nil {
-		log.Error("DefaultDialer.Dial", "err", err.Error())
+		log.Error("websocket.Dial", "guid", s.WsRequest.GetGuid(), "err", err.Error())
 		return err
 	}
 	// TODO создать и вернуть ошибку
 	//if resp.StatusCode != 200 {
 	if resp.StatusCode >= http.StatusBadRequest {
-		log.Error("websocket.Dial", "resp.StatusCode", resp.StatusCode)
+		log.Error("websocket.Dial", "guid", s.WsRequest.GetGuid(), "resp.StatusCode", resp.StatusCode)
 	}
 	// пошлем сообщение для подписки
 	err = s.sendMessage(conn)
@@ -220,7 +222,7 @@ func (s *WsService) sendMessage(conn *websocket.Conn) error {
 	// получим токен доступа
 	token, err := s.c.GetJWT()
 	if err != nil {
-		log.Error("sendMessage: ошибка поучение токена доступа", "err", err.Error())
+		log.Error("sendMessage: ошибка поучение токена доступа", "guid", s.WsRequest.GetGuid(), "err", err.Error())
 		return err
 	}
 	s.WsRequest.SetToken(token)
@@ -231,7 +233,7 @@ func (s *WsService) sendMessage(conn *websocket.Conn) error {
 	//log.Debug("sendMessage", slog.Any("buf", buf))
 	err = conn.WriteMessage(websocket.TextMessage, buf)
 	if err != nil {
-		log.Error("sendMessage: conn.WriteMessage", "err", err.Error())
+		log.Error("sendMessage: conn.WriteMessage", "guid", s.WsRequest.GetGuid(), "err", err.Error())
 		return err
 	}
 	log.Debug("sendMessage успешно послано", "guid", s.WsRequest.GetGuid())
@@ -257,7 +259,7 @@ func (s *WsService) Read(ctx context.Context, conn *websocket.Conn) {
 		default:
 			_, message, err := conn.ReadMessage()
 			if err != nil {
-				log.Error("ReadMessage", "err", err.Error())
+				log.Error("ReadMessage", "guid", s.WsRequest.GetGuid(), "err", err.Error())
 				// и дальше обрабатываем разные типы ошибок
 				_ = conn.Close()
 				s.Reconnect()
@@ -271,33 +273,37 @@ func (s *WsService) Read(ctx context.Context, conn *websocket.Conn) {
 }
 
 // TODO создать обработчик по всем событиям
+// или создать буферизированный канал с данными json.RawMessage и посылать данные туда
+// предварительно запустив "НУЖНЫЙ" обработчик данных, где читать этот канал
 func (s *WsService) handler(message []byte) {
-	log.Debug("handler", "message", string(message))
+	log.Debug("handler", "guid", s.WsRequest.GetGuid(), "message", string(message))
 	msg := new(WSResponse)
 	err := json.Unmarshal(message, msg)
 	if err != nil {
-		log.Error("handlerEvent", "error json.Unmarshal", err.Error())
+		log.Error("handlerEvent", "guid", s.WsRequest.GetGuid(), "error json.Unmarshal", err.Error())
 		return
 	}
 	//log.Debug("handler", "msg", msg)
 	// системное сообщение
 	if msg.HttpCode != 0 {
+
 		if msg.HttpCode >= 400 {
-			log.Error("handlerEvent", "err", msg.String())
-			// закроем
+			log.Error("handlerEvent", "guid", s.WsRequest.GetGuid(), "err", msg.String())
+			// закроем обработчик
 			s.Close()
 
 		}
 		return
 	}
 	// иначе информационное сообщение
+	// TODO посылаем данные в канал ?
 	switch s.WsRequest.GetOpCode() {
 	case OnCandleSubscribe:
 		s.onCandle(msg.Data)
 	case onQuotesSubscribe:
 		s.onQuote(msg.Data)
 	default:
-		log.Error("WsService.handler", "OpCode неизвеcтен", s.WsRequest.GetOpCode())
+		log.Error("WsService.handler", "guid", s.WsRequest.GetGuid(), "OpCode неизвеcтен", s.WsRequest.GetOpCode())
 	}
 }
 
@@ -306,7 +312,7 @@ func (s *WsService) onCandle(data *json.RawMessage) {
 	candle := Candle{}
 	err := json.Unmarshal(*data, &candle)
 	if err != nil {
-		log.Error("WsService.onCandle", "json.Unmarshaljson err", err.Error())
+		log.Error("WsService.onCandle", "guid", s.WsRequest.GetGuid(), "json.Unmarshaljson err", err.Error())
 		return
 	}
 
@@ -324,7 +330,7 @@ func (s *WsService) onCandle(data *json.RawMessage) {
 	// # Пришла новая свеча
 	if candle.Time > s.prevCandle.Time {
 		// новая свеча
-		log.Debug("WsService OnCandle", "time", s.prevCandle.GeTime(), "candle", s.prevCandle)
+		log.Debug("WsService OnCandle", "guid", s.WsRequest.GetGuid(), "time", s.prevCandle.GeTime(), "candle", s.prevCandle)
 		s.c.PublishCandleClosed(s.prevCandle) // пошлем в рассылку
 		s.prevCandle = candle
 
@@ -336,7 +342,7 @@ func (s *WsService) onQuote(data *json.RawMessage) {
 	quote := Quote{}
 	err := json.Unmarshal(*data, &quote)
 	if err != nil {
-		log.Error("WsService.onQuote", "json.Unmarshaljson err", err.Error())
+		log.Error("WsService.onQuote", "guid", s.WsRequest.GetGuid(), "json.Unmarshaljson err", err.Error())
 		return
 	}
 	//log.Debug("onQuote", slog.Any("Quote", quote))
@@ -350,7 +356,7 @@ func (s *WsService) Do(ctx context.Context) error {
 
 		err := s.Connect(ctx)
 		if err != nil {
-			log.Error("s.Connect(ctx)", "err", err)
+			log.Error("s.Connect(ctx)", "guid", s.WsRequest.GetGuid(), "err", err)
 			return
 		}
 
