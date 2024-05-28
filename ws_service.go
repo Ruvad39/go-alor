@@ -3,6 +3,7 @@ package alor
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"net/http"
 	"sync"
@@ -37,6 +38,11 @@ type WsMessage struct {
 	Message     string `json:"message"`
 	HttpCode    int    `json:"httpCode"`
 	RequestGuid string `json:"requestGuid"`
+}
+
+func (m *WsMessage) String() string {
+	return fmt.Sprintf("<APIError> requestGuid=%s, httpCode=%d, message=%s", m.RequestGuid, m.HttpCode, m.Message)
+
 }
 
 type WSResponse struct {
@@ -276,6 +282,12 @@ func (s *WsService) handler(message []byte) {
 	//log.Debug("handler", "msg", msg)
 	// системное сообщение
 	if msg.HttpCode != 0 {
+		if msg.HttpCode >= 400 {
+			log.Error("handlerEvent", "err", msg.String())
+			// закроем
+			s.Close()
+
+		}
 		return
 	}
 	// иначе информационное сообщение

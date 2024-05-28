@@ -28,12 +28,15 @@ func main() {
 
 	// получить параметры по торговому инструменту
 	board := "" // "TQBR"
-	symbol := "SIM4"
-	sec, err := client.GetSecurity(ctx, board, symbol)
-
+	symbol := "Si-6.24"
+	sec, ok, err := client.GetSecurity(ctx, board, symbol)
 	if err != nil {
 		slog.Info("main.GetSecurity", "err", err.Error())
 		return
+	}
+	if !ok {
+		slog.Info("main.GetSecurity", symbol, "нет такого инструмента")
+		//return
 	}
 	slog.Info("symbol", slog.Any("sec", sec))
 
@@ -45,17 +48,14 @@ func main() {
 		"LotSize", sec.LotSize,
 		"MinStep", sec.MinStep,
 	)
-	//return
-	// запрос списка инструментов
-	// sector = FORTS, FOND, CURR
+
 	// Если не указано иное значение параметра limit, в ответе возвращается только 25 объектов за раз
-	params := alor.Params{
-		Sector: "FOND",
-		Board:  "TQBR",
-		Query:  "",
-		Limit:  400,
-	}
-	Sec, err := client.GetSecurities(ctx, params)
+	Sec, err := client.GetSecurities(ctx,
+		alor.WithSector("FOND"),
+		alor.WithBoard("TQBR"),
+		alor.WithLimit(400),
+	)
+
 	if err != nil {
 		slog.Info("main.GetSecurity", "err", err.Error())
 		return

@@ -12,14 +12,14 @@ go get github.com/Ruvad39/go-alor
 
 ## какой api реализован 
 ```go
-	// GetTime текущее время сервера
+// GetTime текущее время сервера
 GetTime(ctx context.Context) (time.Time, error)
 
 // GetSecurity получить параметры по торговому инструменту
-GetSecurity(ctx context.Context, board, symbol string) (Security, error)
+GetSecurity(ctx context.Context, board, symbol string) (Security, bool, error)
 
 // GetSecurities получить список торговых инструментов
-GetSecurities(ctx context.Context, params Params) ([]Security, error)
+GetSecurities(ctx context.Context, opts ...Option) ([]Security, error)
 
 // GetQuotes Получение информации о котировках для выбранных инструментов
 GetQuotes(ctx context.Context, symbols string) ([]Quote, error)
@@ -103,7 +103,15 @@ slog.Info("time", "servTime",servTime.String())
 ```go
 board := "TQBR"
 symbol :=  "SBER"
-sec, err := client.GetSecurity(ctx, board, symbol)
+sec, ok, err := client.GetSecurity(ctx, board, symbol)
+if err != nil {
+    slog.Info("main.GetSecurity", "err", err.Error())
+return
+}
+if !ok {
+    slog.Info("main.GetSecurity", symbol, "нет такого инструмента")
+//return
+}
 slog.Info("securities",
     "Symbol", sec.Symbol,
     "Exchange", sec.Exchange,
@@ -116,13 +124,11 @@ slog.Info("securities",
 // запрос списка инструментов
 // sector = FORTS, FOND, CURR
 // Если не указано иное значение параметра limit, в ответе возвращается только 25 объектов за раз
-params := alor.Params{
-    Sector: "FOND",
-    Board:  "TQBR",
-    Query:  "",
-    Limit:  400,
-}
-sec, err := client.GetSecurities(ctx, params)
+Sec, err := client.GetSecurities(ctx,
+    alor.WithSector("FOND"),
+    alor.WithBoard("TQBR"),
+    //alor.WithLimit(5),
+)
 if err != nil {
 slog.Info("main.GetSecurity", "err", err.Error())
 return

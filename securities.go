@@ -3,13 +3,15 @@ package alor
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 	"path"
 )
 
 // GetSecurity получить параметры по торговому инструменту
-func (c *Client) GetSecurity(ctx context.Context, board, symbol string) (Security, error) {
+// TODO использовать паттерн ok (Security, bool, error) ?
+func (c *Client) GetSecurity(ctx context.Context, board, symbol string) (Security, bool, error) {
 	queryURL, _ := url.Parse("/md/v2/Securities")
 	queryURL.Path = path.Join(queryURL.Path, c.Exchange)
 	queryURL.Path = path.Join(queryURL.Path, symbol)
@@ -26,19 +28,28 @@ func (c *Client) GetSecurity(ctx context.Context, board, symbol string) (Securit
 	result := Security{}
 	data, err := c.callAPI(ctx, r)
 	if err != nil {
-		return result, err
+		// если ошибка "NotFound"
+		if errors.Is(err, ErrNotFound) {
+			return result, false, nil
+		}
+		return result, false, err
 	}
 	if err = json.Unmarshal(data, &result); err != nil {
-		return result, err
+		return result, false, err
 	}
-	return result, nil
+	return result, true, nil
 
 }
 
 // GetSecurities получить список торговых инструментов
 // Объекты в ответе сортируются по объёму торгов.
 // Если не указано иное значение параметра limit, в ответе возвращается только 25 объектов за раз
-func (c *Client) GetSecurities(ctx context.Context, params Params) ([]Security, error) {
+func (c *Client) GetSecurities(ctx context.Context, opts ...Option) ([]Security, error) {
+	params := &Options{}
+	// Обработаем входящие параметры
+	for _, opt := range opts {
+		opt(params)
+	}
 	r := &request{
 		method:   http.MethodGet,
 		endpoint: "/md/v2/Securities",

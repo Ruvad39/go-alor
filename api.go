@@ -13,10 +13,10 @@ type IAlorClient interface {
 	GetTime(ctx context.Context) (time.Time, error)
 
 	// GetSecurity получить параметры по торговому инструменту
-	GetSecurity(ctx context.Context, board, symbol string) (Security, error)
+	GetSecurity(ctx context.Context, board, symbol string) (Security, bool, error)
 
 	// GetSecurities получить список торговых инструментов
-	GetSecurities(ctx context.Context, params Params) ([]Security, error)
+	GetSecurities(ctx context.Context, opts ...Option) ([]Security, error)
 
 	// GetQuotes Получение информации о котировках для выбранных инструментов
 	GetQuotes(ctx context.Context, symbols string) ([]Quote, error)

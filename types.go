@@ -30,16 +30,16 @@ type Quote struct {
 	BidVol               float32 `json:"bid_vol"`              // Количество лотов в ближайшем биде в биржевом стакане
 	AskVolumeTotal       int32   `json:"total_ask_vol"`        // Суммарное количество лотов во всех асках в биржевом стакане
 	BidVolumeTotal       int32   `json:"total_bid_vol"`        // Суммарное количество лотов во всех бидах в биржевом стакане
-	LastPriceTimestamp   int64   `json:"last_price_timestamp"` // UTC-timestamp для значения поля last_price
+	LastPriceTimestamp   int64   `json:"last_price_timestamp"` //  Unix time seconds для значения поля last_price
 	LotSize              float64 `json:"lotsize"`              // Размер лота
 	LotValue             float64 `json:"lotvalue"`             // Суммарная стоимость лота
 	FaceValue            float64 `json:"facevalue"`            // Показатель, значение которого варьируется в зависимости от выбранного рынка:
 	OpenInterest         int64   `json:"open_interest"`        // Открытый интерес (open interest). Если не поддерживается инструментом — значение 0 или null
-	AccruedInt           float64 `json:"accruedInt"`           // Начислено (НКД)
 	OrderBookMSTimestamp int64   `json:"ob_ms_timestamp"`      // Временная метка (UTC) сообщения о состоянии биржевого стакана в формате Unix Time Milliseconds
 	Type                 string  `json:"type"`                 // Полное название фьючерса
-	Change               float64 `json:"change"`               // Разность цены и цены предыдущего закрытия
-	ChangePercent        float64 `json:"change_percent"`       // Относительное изменение цены
+	//Change               float64 `json:"change"`               // Разность цены и цены предыдущего закрытия
+	//ChangePercent        float64 `json:"change_percent"`       // Относительное изменение цены
+	//AccruedInt           float64 `json:"accruedInt"`           // Начислено (НКД)
 }
 
 // FaceValue
@@ -51,6 +51,10 @@ type Quote struct {
 func (q Quote) LastTime() time.Time {
 	return time.Unix(q.LastPriceTimestamp, 0)
 }
+
+//func (q Quote) LastTime2() time.Time {
+//	return time.Unix(q.OrderBookMSTimestamp, 0)
+//}
 
 // Interval период свечей
 type Interval string

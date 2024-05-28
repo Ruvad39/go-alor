@@ -1,9 +1,19 @@
 package alor
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // SubscribeCandles подписка на свечи
 func (c *Client) SubscribeCandles(ctx context.Context, symbol string, interval Interval, opts ...WSRequestOption) error {
+	_, ok, err := c.GetSecurity(ctx, "", symbol)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf("инструмент %s не найден", symbol)
+	}
 	r := &WSRequestBase{
 		OpCode:      OnCandleSubscribe,
 		Code:        symbol,
@@ -24,6 +34,14 @@ func (c *Client) SubscribeCandles(ctx context.Context, symbol string, interval I
 
 // SubscribeQuotes подписка на котировки
 func (c *Client) SubscribeQuotes(ctx context.Context, symbol string, opts ...WSRequestOption) error {
+	_, ok, err := c.GetSecurity(ctx, "", symbol)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf("инструмент %s не найден", symbol)
+	}
+
 	r := &WSRequestBase{
 		OpCode:    onQuotesSubscribe,
 		Code:      symbol,

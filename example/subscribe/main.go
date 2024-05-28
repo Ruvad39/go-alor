@@ -28,7 +28,7 @@ func main() {
 	slog.Info("start main ")
 	refreshToken, _ := os.LookupEnv("ALOR_REFRESH")
 
-	// создание клиентапщ
+	// создание клиентап
 	client := alor.NewClient(refreshToken)
 	//client.SetLogDebug(true)
 
@@ -51,11 +51,17 @@ func main() {
 	}
 
 	// Котировки
+	//err = client.SubscribeQuotes(ctx, "Si-6.24", alor.WithFrequency(25))
+	//if err != nil {
+	//	slog.Error("SubscribeQuotes", "err", err.Error())
+	//	return
+	//}
 	err = client.SubscribeQuotes(ctx, "SBRF-6.24")
 	if err != nil {
 		slog.Error("SubscribeQuotes", "err", err.Error())
 		return
 	}
+	//_ = client.SubscribeQuotes(ctx, "SBER")
 
 	//----------------------------------
 	// ожидание сигнала о закрытие
@@ -82,12 +88,12 @@ func onCandle(candle alor.Candle) {
 func onTick(quote alor.Quote) {
 	slog.Info("onTick",
 		"symbol", quote.Symbol,
-		"time", quote.LastTime().String(),
+		"LastPriceTimestamp", quote.LastTime(),
+		//"OrderBookMSTimestamp", quote.OrderBookMSTimestamp,
 		"Bid", quote.Bid,
 		"Ask", quote.Ask,
 		"LastPrice", quote.LastPrice,
 		"OpenInterest", quote.OpenInterest,
-		"ChangePercent", quote.ChangePercent,
 	)
 }
 
