@@ -161,7 +161,8 @@ func (s *WsService) reconnector(ctx context.Context) {
 		case <-s.ReconnectC:
 			log.Warn("принят сигнал reconnect",
 				"период восстановления повторного подключения", reconnectCoolDownPeriod,
-				"guid", s.WsRequest.GetGuid())
+				"guid", s.WsRequest.GetGuid(),
+			)
 			time.Sleep(reconnectCoolDownPeriod)
 
 			log.Warn("re-connecting...")

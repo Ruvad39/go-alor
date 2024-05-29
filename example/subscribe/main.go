@@ -33,24 +33,19 @@ func main() {
 	//client.SetLogDebug(true)
 
 	// добавим коллбек на событие появление новой свечи
-	client.RegisterOnCandleClosed(func(candle alor.Candle) {
-		onCandle(candle)
-	})
-
+	client.SetOnCandle(onCandle)
 	// добавим коллбек на котировки
-	client.RegisterOnQuotes(func(quote alor.Quote) {
-		onTick(quote)
-	})
+	client.SetOnQuote(onTick)
 
 	// подписка на свечи
-
-	err := client.SubscribeCandles(ctx, "SBER", alor.Interval_M1, alor.WithFrequency(500))
+	err := client.SubscribeCandles(ctx, "SBRF-6.24", alor.Interval_M1, alor.WithFrequency(500))
 	if err != nil {
-		slog.Error("SubscribeCandles2", "err", err.Error())
+		slog.Error("SubscribeCandles", "err", err.Error())
 		return
 	}
+	_ = client.SubscribeCandles(ctx, "Si-6.24", alor.Interval_M1, alor.WithFrequency(500))
 
-	// Котировки
+	// подписка на Котировки
 	err = client.SubscribeQuotes(ctx, "Si-6.24", alor.WithFrequency(25))
 	if err != nil {
 		slog.Error("SubscribeQuotes", "err", err.Error())

@@ -81,10 +81,6 @@ var intervalName = map[Interval]string{
 	Interval_Y1:  "Y1",
 }
 
-//func (c ConnState) String() string {
-//	return stateName[c]
-//}
-
 func (i Interval) String() string {
 	return intervalName[i]
 	//return string(i)

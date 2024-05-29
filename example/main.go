@@ -62,15 +62,9 @@ func main() {
 	//client.SetLogDebug(true)
 
 	// добавим коллбек на событие появление новой свечи
-	client.RegisterOnCandleClosed(func(candle alor.Candle) {
-		onCandle(candle)
-	})
+	client.SetOnCandle(onCandle)
 
 	//подписка на свечи
-
-	// через создание сервиса
-	//err := client.NewWSCandleService().Symbol("SBER").Interval(alor.Interval_M1).Do2(ctx)
-	//err := client.NewWSCandleService("SBER", alor.Interval_M1).Do(ctx)
 	err := client.SubscribeCandles(ctx, "SBER", alor.Interval_M1)
 	if err != nil {
 		slog.Error("main.NewWSCandleService", "err", err.Error())
@@ -103,6 +97,20 @@ func main() {
 	slog.Info("exiting...")
 }
 
+// Приходят данные по событию закрытия свечи
+func onCandle(candle alor.Candle) {
+	slog.Info("onCandle ",
+		"symbol", candle.Symbol,
+		"tf", candle.Interval.String(),
+		"time", candle.GeTime().String(),
+		"open", candle.Open,
+		"high", candle.High,
+		"low", candle.Low,
+		"close", candle.Close,
+		"volume", candle.Volume,
+	)
+}
+
 // Ожидание сигнала о закрытие
 func waitForSignal(ctx context.Context, signals ...os.Signal) os.Signal {
 	var exit = make(chan os.Signal, 1)
@@ -118,18 +126,4 @@ func waitForSignal(ctx context.Context, signals ...os.Signal) os.Signal {
 	}
 
 	return nil
-}
-
-// сюда приходят данные по закрытым свечам
-func onCandle(candle alor.Candle) {
-	slog.Info("onCandle ",
-		"symbol", candle.Symbol,
-		"tf", candle.Interval.String(),
-		"time", candle.GeTime().String(),
-		"open", candle.Open,
-		"high", candle.High,
-		"low", candle.Low,
-		"close", candle.Close,
-		"volume", candle.Volume,
-	)
 }
