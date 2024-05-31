@@ -1,8 +1,20 @@
 package alor
 
 import (
+	"fmt"
+	"strconv"
 	"time"
 )
+
+var TzMsk = initMoscow()
+
+func initMoscow() *time.Location {
+	var loc, err = time.LoadLocation("Europe/Moscow")
+	if err != nil {
+		loc = time.FixedZone("MSK", int(3*time.Hour/time.Second))
+	}
+	return loc
+}
 
 type User struct {
 	Portfolio string `json:"portfolio"`
@@ -47,9 +59,10 @@ type Quote struct {
 // Для срочного рынка — размер одного лота
 // Для валютного рынка — количество валюты лота, за которое указывается цена в котировках
 
-// переведем время с UTC-timestamp в Time
+// переведем время с UTC-timestamp в Time и сразу поменяем в Московскеое время
 func (q Quote) LastTime() time.Time {
-	return time.Unix(q.LastPriceTimestamp, 0)
+	return time.Unix(q.LastPriceTimestamp, 0).In(TzMsk)
+	//return time.Unix(q.LastPriceTimestamp, 0)
 }
 
 //func (q Quote) LastTime2() time.Time {
@@ -82,6 +95,10 @@ var intervalName = map[Interval]string{
 }
 
 func (i Interval) String() string {
+	//return intervalName[i]
+	return string(i)
+}
+func (i Interval) ToString() string {
 	return intervalName[i]
 	//return string(i)
 }
@@ -100,8 +117,58 @@ type Candle struct {
 
 // GeTime вернем время начала свечи в формате time.Time
 func (k *Candle) GeTime() time.Time {
-	return time.Unix(k.Time, 0)
+	//t := time.Unix(k.Time, 0).In(TzMsk)
+	return time.Unix(k.Time, 0).In(TzMsk)
+
+	//return time.Unix(k.Time, 0).LoadLocation(TzMsk)
 }
+
+// <TICKER>,<PER>,<DATE>,<TIME>,<OPEN>,<HIGH>,<LOW>,<CLOSE>,<VOL>
+
+//func (k *Candle) CsvHeader() []string {
+//return []string{
+//	"<TICKER>", "<PER>", "<DATE>", "<TIME>", "<OPEN>", "<HIGH>", "<LOW>", "<CLOSE>", "<VOLUME>",
+//}
+
+func (k *Candle) CsvHeader() string {
+	return "<TICKER>,<PER>,<DATE>,<TIME>,<OPEN>,<HIGH>,<LOW>,<CLOSE>,<VOLUME>"
+}
+
+// LKOH Splice,1,20130108,100700,20525,20525,20485,20504,138
+
+func (k *Candle) CsvRecords() string {
+	delimiter := ","
+	return fmt.Sprint(
+		k.Symbol, delimiter,
+		k.Interval.ToString(), delimiter,
+		k.GeTime().Format("20060102"), delimiter,
+		k.GeTime().Format("150405"), delimiter,
+		strconv.FormatFloat(k.Open, 'f', -1, 64), delimiter,
+		strconv.FormatFloat(k.High, 'f', -1, 64), delimiter,
+		strconv.FormatFloat(k.Low, 'f', -1, 64), delimiter,
+		strconv.FormatFloat(k.Low, 'f', -1, 64), delimiter,
+		strconv.FormatFloat(k.Close, 'f', -1, 64), delimiter,
+		strconv.FormatInt(int64(k.Volume), 10),
+	)
+
+}
+
+//func (k *Candle) CsvRecords() [][]string {
+//	return [][]string{
+//		{
+//			k.Symbol,
+//			k.Interval.String(),
+//			k.GeTime().Format("20060102"),
+//			k.GeTime().Format("150405"),
+//			strconv.FormatFloat(k.Open, 'f', -1, 64),
+//			strconv.FormatFloat(k.High, 'f', -1, 64),
+//			strconv.FormatFloat(k.Low, 'f', -1, 64),
+//			strconv.FormatFloat(k.Low, 'f', -1, 64),
+//			strconv.FormatFloat(k.Close, 'f', -1, 64),
+//			strconv.FormatInt(int64(k.Volume), 10),
+//		},
+//	}
+//}
 
 //func (k Candle) String() string {
 //	str := fmt.Sprintf("%v,%v,%v, O:%v, H:%v, L:%v, C:%v, V:%v", k.GeTime().String(), k.Symbol, k.Interval, k.Open, k.High, k.Low, k.Close, k.Volume)
@@ -197,4 +264,8 @@ type Order struct {
 	TimeInForce    TimeInForce `json:"timeInForce"`    // Тип заявки oneday - До конца дня goodtillcancelled - Активна до отмены
 	Volume         float64     `json:"volume"`         // Объем, для рыночных заявок - null
 	//Iceberg // Специальные поля для сделок со скрытой частью
+}
+
+func IsActiveOrder(o Order) bool {
+	return o.Status == OrderStatusWorking
 }

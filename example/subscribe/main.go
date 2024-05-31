@@ -51,8 +51,8 @@ func main() {
 		slog.Error("SubscribeQuotes", "err", err.Error())
 		return
 	}
-	_ = client.SubscribeQuotes(ctx, "SBRF-6.24")
-	_ = client.SubscribeQuotes(ctx, "SBER")
+	//_ = client.SubscribeQuotes(ctx, "SBRF-6.24")
+	//_ = client.SubscribeQuotes(ctx, "SBER")
 
 	//----------------------------------
 	// ожидание сигнала о закрытие
