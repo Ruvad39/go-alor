@@ -136,7 +136,8 @@ func (k *Candle) CsvHeader() string {
 
 // LKOH Splice,1,20130108,100700,20525,20525,20485,20504,138
 
-func (k *Candle) CsvRecords() string {
+// возвращает строку через запятую
+func (k *Candle) CsvRecordTest() string {
 	delimiter := ","
 	return fmt.Sprint(
 		k.Symbol, delimiter,
@@ -153,22 +154,21 @@ func (k *Candle) CsvRecords() string {
 
 }
 
-//func (k *Candle) CsvRecords() [][]string {
-//	return [][]string{
-//		{
-//			k.Symbol,
-//			k.Interval.String(),
-//			k.GeTime().Format("20060102"),
-//			k.GeTime().Format("150405"),
-//			strconv.FormatFloat(k.Open, 'f', -1, 64),
-//			strconv.FormatFloat(k.High, 'f', -1, 64),
-//			strconv.FormatFloat(k.Low, 'f', -1, 64),
-//			strconv.FormatFloat(k.Low, 'f', -1, 64),
-//			strconv.FormatFloat(k.Close, 'f', -1, 64),
-//			strconv.FormatInt(int64(k.Volume), 10),
-//		},
-//	}
-//}
+// возвращает массив строки для записи через "encoding/csv"
+func (k *Candle) CsvRecord() []string {
+	return []string{
+		k.Symbol,
+		k.Interval.String(),
+		k.GeTime().Format("20060102"),
+		k.GeTime().Format("150405"),
+		strconv.FormatFloat(k.Open, 'f', -1, 64),
+		strconv.FormatFloat(k.High, 'f', -1, 64),
+		strconv.FormatFloat(k.Low, 'f', -1, 64),
+		strconv.FormatFloat(k.Low, 'f', -1, 64),
+		strconv.FormatFloat(k.Close, 'f', -1, 64),
+		strconv.FormatInt(int64(k.Volume), 10),
+	}
+}
 
 //func (k Candle) String() string {
 //	str := fmt.Sprintf("%v,%v,%v, O:%v, H:%v, L:%v, C:%v, V:%v", k.GeTime().String(), k.Symbol, k.Interval, k.Open, k.High, k.Low, k.Close, k.Volume)
