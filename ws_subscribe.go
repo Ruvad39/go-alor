@@ -58,3 +58,23 @@ func (c *Client) SubscribeQuotes(ctx context.Context, symbol string, opts ...WSR
 	s := c.NewWsService(r)
 	return s.Do(ctx)
 }
+
+// SubscribeOrders подписка на получение информации обо всех биржевых заявках с участием указанного портфеля
+func (c *Client) SubscribeOrders(ctx context.Context, portfolio string, opts ...WSRequestOption) error {
+
+	r := &WSRequestBase{
+		OpCode:    onOrdersSubscribe,
+		Portfolio: portfolio,
+		Exchange:  c.Exchange,
+		//OrderStatuses:  ["filled"],
+	}
+	// обработаем входящие параметры
+	for _, opt := range opts {
+		opt(r)
+	}
+	// TODO создать метод создания guid
+	r.Guid = "orders|" + r.Portfolio
+
+	s := c.NewWsService(r)
+	return s.Do(ctx)
+}

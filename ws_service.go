@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"log/slog"
 	"net/http"
 	"sync"
 	"time"
@@ -19,8 +20,10 @@ const (
 	OnCandleSubscribe    = "BarsGetAndSubscribe"        // Подписка на историю цен (свечи)
 	onQuotesSubscribe    = "QuotesSubscribe"            // Подписка на информацию о котировках
 	onOrderBookSubscribe = "OrderBookGetAndSubscribe"   //  Подписка на биржевой стакан
-	onAllTradesSubscribe = "AllTradesGetAndSubscribe"   // — Подписка на все сделки
-	onPositionSubscribe  = "PositionsGetAndSubscribeV2" //  — Подписка на информацию о текущих позициях по торговым инструментам и деньгам
+	onAllTradesSubscribe = "AllTradesGetAndSubscribe"   // Подписка на все сделки
+	onPositionSubscribe  = "PositionsGetAndSubscribeV2" // Подписка на информацию о текущих позициях по торговым инструментам и деньгам
+	onOrdersSubscribe    = "OrdersGetAndSubscribeV2"    // Получение информации обо всех биржевых заявках с участием указанного портфеля
+	onTradesSubscribe    = "TradesGetAndSubscribeV2"    // Получение информации о всех сделках, совершённых с использованием указанного портфеля
 )
 
 // IwsRequest Интерфейс которым должна обладать структура запроса для подписки
@@ -55,20 +58,21 @@ type WSRequestOption func(r *WSRequestBase)
 
 // поля которые должны быть во всех запросах на подписку по websocket
 type WSRequestBase struct {
-	OpCode          string   `json:"opcode"`                    // Код операции
-	Guid            string   `json:"guid"`                      // Уникальный идентификатор запроса. Все ответные сообщения будут иметь такое же значение поля guid
-	Token           string   `json:"token"`                     // Access Токен для авторизации запроса
-	Exchange        string   `json:"exchange"`                  // Биржа: MOEX — Московская Биржа SPBX — СПБ Биржа
-	Frequency       int32    `json:"freq"`                      // Максимальная частота отдачи данных сервером в миллисекундах
-	Format          string   `json:"format"`                    // Формат представления возвращаемых данных: Simple, Slim, Heavy
-	Code            string   `json:"code,omitempty"`            // Код финансового инструмента (Тикер)
-	Interval        Interval `json:"tf"`                        // Длительность таймфрейма в секундах или код (D — дни, W — недели, M — месяцы, Y — годы)
-	From            int64    `json:"from,omitempty"`            // Дата и время (UTC) для первой запрашиваемой свечи
-	SkipHistory     bool     `json:"skipHistory,omitempty"`     // Флаг отсеивания исторических данных: true — отображать только новые данные false — отображать в том числе данные из истории
-	Depth           int32    `json:"depth,omitempty"`           // Глубина стакана. Стандартное и максимальное значение — 20 (20х20).
-	Portfolio       string   `json:"portfolio,omitempty"`       // Идентификатор клиентского портфеля
-	InstrumentGroup string   `json:"instrumentGroup,omitempty"` // Код режима торгов (Борд):
-	OrderStatuses   string   `json:"orderStatuses,omitempty"`   // Опциональный фильтр по статусам заявок. Влияет только на фильтрацию первичных исторических данных при подписке. Возможные значения:
+	OpCode    string   `json:"opcode"`         // Код операции
+	Guid      string   `json:"guid"`           // Уникальный идентификатор запроса. Все ответные сообщения будут иметь такое же значение поля guid
+	Token     string   `json:"token"`          // Access Токен для авторизации запроса
+	Exchange  string   `json:"exchange"`       // Биржа: MOEX — Московская Биржа SPBX — СПБ Биржа
+	Frequency int32    `json:"freq"`           // Максимальная частота отдачи данных сервером в миллисекундах
+	Format    string   `json:"format"`         // Формат представления возвращаемых данных: Simple, Slim, Heavy
+	Code      string   `json:"code,omitempty"` // Код финансового инструмента (Тикер)
+	Interval  Interval `json:"tf"`             // Длительность таймфрейма в секундах или код (D — дни, W — недели, M — месяцы, Y — годы)
+	From      int64    `json:"from,omitempty"` // Дата и время (UTC) для первой запрашиваемой свечи
+	//SkipHistory     bool     `json:"skipHistory,omitempty"`     // Флаг отсеивания исторических данных: true — отображать только новые данные false — отображать в том числе данные из истории
+	SkipHistory     bool   `json:"skipHistory"`               // Флаг отсеивания исторических данных: true — отображать только новые данные false — отображать в том числе данные из истории
+	Depth           int32  `json:"depth,omitempty"`           // Глубина стакана. Стандартное и максимальное значение — 20 (20х20).
+	Portfolio       string `json:"portfolio,omitempty"`       // Идентификатор клиентского портфеля
+	InstrumentGroup string `json:"instrumentGroup,omitempty"` // Код режима торгов (Борд):
+	OrderStatuses   string `json:"orderStatuses,omitempty"`   // Опциональный фильтр по статусам заявок. Влияет только на фильтрацию первичных исторических данных при подписке. Возможные значения:
 }
 
 func (r *WSRequestBase) Marshal() ([]byte, error) {
@@ -303,6 +307,8 @@ func (s *WsService) handler(message []byte) {
 		s.onCandle(msg.Data)
 	case onQuotesSubscribe:
 		s.onQuote(msg.Data)
+	case onOrdersSubscribe:
+		s.onOrder(msg.Data)
 	default:
 		log.Error("WsService.handler", "guid", s.WsRequest.GetGuid(), "OpCode неизвеcтен", s.WsRequest.GetOpCode())
 	}
@@ -339,6 +345,7 @@ func (s *WsService) onCandle(data *json.RawMessage) {
 
 }
 
+// onQuote  handler обработка  получения котировок
 func (s *WsService) onQuote(data *json.RawMessage) {
 	quote := Quote{}
 	err := json.Unmarshal(*data, &quote)
@@ -348,6 +355,19 @@ func (s *WsService) onQuote(data *json.RawMessage) {
 	}
 	//log.Debug("onQuote", slog.Any("Quote", quote))
 	s.c.PublishQuotes(quote) // пошлем в рассылку
+
+}
+
+// onOrder handler обработка получения заявок
+func (s *WsService) onOrder(data *json.RawMessage) {
+	order := Order{}
+	err := json.Unmarshal(*data, &order)
+	if err != nil {
+		log.Error("WsService.onOrder", "guid", s.WsRequest.GetGuid(), "json.Unmarshaljson err", err.Error())
+		return
+	}
+	log.Debug("onOrder", slog.Any("Order", order))
+	s.c.PublishOrder(order) // пошлем в рассылку
 
 }
 

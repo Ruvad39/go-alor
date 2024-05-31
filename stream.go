@@ -1,25 +1,30 @@
 package alor
 
-type CandleCloseCallback func(candle Candle)
-type QuoteCallback func(quote Quote)
+type CandleCloseFunc func(candle Candle)
+type QuoteFunc func(quote Quote)
+type OrderFunc func(order Order)
 
 //type DataFeedConsumer func(Candle)
 
 type Stream struct {
-	OnCandle CandleCloseCallback // Функция обработки появления новой свечи
-	OnQuote  QuoteCallback       // Функция обработки появления котировки
-	//candleClosedCallbacks []func(candle Candle) // Список (callbacks) на закрытие свечи
-	//quotesCallbacks       []func(quote Quote)   // Список (callbacks) на котировки
+	OnCandle CandleCloseFunc // Функция обработки появления новой свечи
+	OnQuote  QuoteFunc       // Функция обработки появления котировки
+	OnOrder  OrderFunc       // Функция обработки появления заявках
 }
 
 // SetOnCandle регистрирует функцию для вызова OnCandleClosed
-func (s *Stream) SetOnCandle(f CandleCloseCallback) {
+func (s *Stream) SetOnCandle(f CandleCloseFunc) {
 	s.OnCandle = f
 }
 
 // SetOnQuote регистрирует функцию для вызова OnQuote
-func (s *Stream) SetOnQuote(f QuoteCallback) {
+func (s *Stream) SetOnQuote(f QuoteFunc) {
 	s.OnQuote = f
+}
+
+// SetOnOrder регистрирует функцию для вызова OnOrder
+func (s *Stream) SetOnOrder(f OrderFunc) {
+	s.OnOrder = f
 }
 
 // RegisterOnCandleClosed регистрирует функцию для вызова OnCandleClosed
@@ -55,7 +60,15 @@ func (s *Stream) PublishQuotes(quote Quote) {
 	}
 	s.OnQuote(quote)
 
-	//for _, cb := range s.quotesCallbacks {
-	//	cb(quote)
-	//}
+}
+
+// PublishOrder пошлем заявки тем кто подписался
+func (s *Stream) PublishOrder(order Order) {
+	hasFunction := s.OnOrder != nil
+	if !hasFunction {
+		log.Error("PublishOrder: не зарегистрирована функция OnOrder")
+		return
+	}
+	s.OnOrder(order)
+
 }

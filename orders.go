@@ -50,15 +50,6 @@ func (c *Client) GetOrder(ctx context.Context, portfolio, orderId string) (Order
 	return result, nil
 }
 
-// снятие заявки
-// ​/commandapi​/warptrans​/TRADE​/v2​/client​/orders​/{orderId}
-// https://apidev.alor.ru/commandapi/warptrans/TRADE/v2/client/orders/93713183?portfolio=D39004&exchange=MOEX&stop=false&jsonResponse=true&format=Simple
-
-//{
-//"code": "OrderToCancelNotFound (404)",
-//"message": "Order to cancel not found"
-//}
-
 // структура ответа
 type OrderResponse struct {
 	Code        string `json:"code"`
@@ -96,6 +87,9 @@ func (c *Client) CancelOrder(ctx context.Context, portfolio, orderId string) (bo
 	//}
 	return true, nil
 }
+
+// TODO SendOrder(ctx context.Context, order OrderRequest) (string, error)
+//
 
 // NewCreateOrderService создать новый ордер
 func (c *Client) NewCreateOrderService() *CreateOrderService {
@@ -182,32 +176,6 @@ func (c *Client) SellMarket(ctx context.Context, symbol string, lot int32, comme
 func (c *Client) SellLimit(ctx context.Context, symbol string, lot int32, price float64, comment string) (string, error) {
 	return c.NewCreateOrderService().Side(SideTypeSell).OrderType(OrderTypeLimit).
 		Symbol(symbol).Qty(lot).Price(price).Comment(comment).Do(ctx)
-}
-
-type Order struct {
-	ID             string      `json:"id"`             // Уникальный идентификатор заявки
-	Symbol         string      `json:"symbol"`         // Тикер (Код финансового инструмента)
-	BrokerSymbol   string      `json:"brokerSymbol"`   // Пара Биржа:Тикер
-	Exchange       string      `json:"exchange"`       // Биржа
-	Portfolio      string      `json:"portfolio"`      // Идентификатор клиентского портфеля
-	Comment        string      `json:"comment"`        // Комментарий к заявке
-	Type           OrderType   `json:"type"`           // Тип заявки limit - Лимитная заявка market - Рыночная заявка
-	Side           SideType    `json:"side"`           // Направление сделки. buy — Купля sell — Продажа
-	Status         OrderStatus `json:"status"`         // статус заявки
-	TransitionTime string      `json:"transTime"`      // Дата и время выставления (UTC)
-	UpdateTime     string      `json:"updateTime"`     // Дата и время изменения статуса заявки (UTC)
-	EndTime        string      `json:"endTime"`        // Дата и время завершения (UTC)
-	QtyUnits       int32       `json:"qtyUnits"`       // Количество (штуки)
-	QtyBatch       int32       `json:"qtyBatch"`       // Количество (лоты)
-	Qty            int32       `json:"qty"`            // Количество (лоты)
-	FilledQtyUnits int32       `json:"filledQtyUnits"` // Количество исполненных (штуки)
-	FilledQtyBatch int32       `json:"filledQtyBatch"` // Количество исполненных (лоты)
-	Filled         int32       `json:"filled"`         // Количество исполненных (лоты)
-	Price          float64     `json:"price"`          // Цена
-	Existing       bool        `json:"existing"`       // True - для данных из "снепшота", то есть из истории. False - для новых событий
-	TimeInForce    TimeInForce `json:"timeInForce"`    // Тип заявки oneday - До конца дня goodtillcancelled - Активна до отмены
-	Volume         float64     `json:"volume"`         // Объем, для рыночных заявок - null
-	//Iceberg // Специальные поля для сделок со скрытой частью
 }
 
 type OrderRequest struct {

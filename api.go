@@ -68,6 +68,9 @@ type IAlorClient interface {
 
 	// SubscribeQuotes подписка на котировки
 	SubscribeQuotes(ctx context.Context, symbol string, opts ...WSRequestOption) error
+
+	// SubscribeOrders подписка на получение информации обо всех биржевых заявках с участием указанного портфеля
+	SubscribeOrders(ctx context.Context, portfolio string, opts ...WSRequestOption) error
 }
 
 // GetTime
