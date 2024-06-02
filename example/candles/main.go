@@ -61,7 +61,7 @@ func main() {
 		candle.Interval = interval
 		//slog.Info("candle", "row", n, "Time", candle.GeTime(), "close", candle.Close)
 		//slog.Info("candle", "row", candle.CsvRecords())
-		fmt.Println(candle.CsvRecords())
+		fmt.Println(candle.CsvRecord())
 	}
 
 }

@@ -72,6 +72,14 @@ func (q Quote) LastTime() time.Time {
 // Interval период свечей
 type Interval string
 
+func (i Interval) String() string {
+	return string(i)
+}
+
+func (i Interval) ToString() string {
+	return intervalToName[i]
+}
+
 // Длительность таймфрейма. В качестве значения можно указать точное количество секунд или код таймфрейма
 const (
 	Interval_S15 Interval = "15"   // 15 секунд
@@ -84,7 +92,7 @@ const (
 
 )
 
-var intervalName = map[Interval]string{
+var intervalToName = map[Interval]string{
 	Interval_S15: "S15",
 	Interval_M1:  "M1",
 	Interval_H1:  "H1",
@@ -94,13 +102,22 @@ var intervalName = map[Interval]string{
 	Interval_Y1:  "Y1",
 }
 
-func (i Interval) String() string {
-	//return intervalName[i]
-	return string(i)
+var nameToInterval = map[string]Interval{
+	"S15": Interval_S15,
+	"M1":  Interval_M1,
+	"H1":  Interval_H1,
+	"D1":  Interval_D1,
+	"W1":  Interval_W1,
+	"Y1":  Interval_Y1,
 }
-func (i Interval) ToString() string {
-	return intervalName[i]
-	//return string(i)
+
+// ParseToInterval преобразуем символьную стоку в Interval
+func ParseToInterval(input string) (Interval, error) {
+	m, ok := nameToInterval[input]
+	if !ok {
+		return "", fmt.Errorf("не поддерживаемый формат периода свечи %s", input)
+	}
+	return m, nil
 }
 
 // Candle Параметры свечи
@@ -137,7 +154,7 @@ func (k *Candle) CsvHeader() string {
 // LKOH Splice,1,20130108,100700,20525,20525,20485,20504,138
 
 // возвращает строку через запятую
-func (k *Candle) CsvRecordTest() string {
+func (k *Candle) CsvRecord() string {
 	delimiter := ","
 	return fmt.Sprint(
 		k.Symbol, delimiter,
@@ -155,7 +172,7 @@ func (k *Candle) CsvRecordTest() string {
 }
 
 // возвращает массив строки для записи через "encoding/csv"
-func (k *Candle) CsvRecord() []string {
+func (k *Candle) StringRecord() []string {
 	return []string{
 		k.Symbol,
 		k.Interval.String(),
