@@ -43,6 +43,46 @@ func (c *Client) GetPortfolio(ctx context.Context, portfolio string) (Portfolio,
 	return result, nil
 }
 
+// GetPortfolioRisk Получение информации по портфельным рискам
+func (c *Client) GetPortfolioRisk(ctx context.Context, portfolio string) (PortfolioRisk, error) {
+	queryURL, _ := url.Parse("/md/v2/Clients")
+	queryURL.Path = path.Join(queryURL.Path, c.Exchange, portfolio, "risk")
+	r := &request{
+		method:   http.MethodGet,
+		endpoint: queryURL.String(),
+	}
+	result := PortfolioRisk{}
+	data, err := c.callAPI(ctx, r)
+	if err != nil {
+		return result, err
+	}
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+// GetPortfolioFortsRisk Получение информации по портфельным рискам
+func (c *Client) GetPortfolioFortsRisk(ctx context.Context, portfolio string) (PortfolioFortsRisk, error) {
+	queryURL, _ := url.Parse("/md/v2/Clients")
+	queryURL.Path = path.Join(queryURL.Path, c.Exchange, portfolio, "fortsrisk")
+	r := &request{
+		method:   http.MethodGet,
+		endpoint: queryURL.String(),
+	}
+	result := PortfolioFortsRisk{}
+	data, err := c.callAPI(ctx, r)
+	if err != nil {
+		return result, err
+	}
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
 // GetPositions получение информации о позициях
 // TODO использовать паттерн ok ([]Position, bool, error) ?
 func (c *Client) GetPositions(ctx context.Context, portfolio string) ([]Position, error) {
@@ -123,6 +163,36 @@ type Portfolio struct {
 	InitialMargin                  float64 `json:"initialMargin"`                  // Маржа
 	RiskBeforeForcePositionClosing float64 `json:"riskBeforeForcePositionClosing"` // Риск до закрытия
 	Commission                     float64 `json:"commission"`                     // Суммарная комиссия (null для Срочного рынка)
+}
+
+type PortfolioRisk struct {
+	Portfolio                 string  `json:"portfolio"`                 // Идентификатор клиентского портфеля
+	Exchange                  string  `json:"exchange"`                  // Биржа:
+	PortfolioEvaluation       float64 `json:"portfolioEvaluation"`       // Общая стоимость портфеля
+	PortfolioLiquidationValue float64 `json:"portfolioLiquidationValue"` // Стоимость ликвидного портфеля
+	InitialMargin             float64 `json:"initialMargin"`             // Начальная маржа
+	MinimalMargin             float64 `json:"minimalMargin"`             // Минимальная маржа
+	CorrectedMargin           float64 `json:"correctedMargin"`           // Скорректированная маржа
+	RiskCoverageRatioOne      float64 `json:"riskCoverageRatioOne"`      // НПР1
+	RiskCoverageRatioTwo      float64 `json:"riskCoverageRatioTwo"`      // НПР2
+	RiskCategoryId            int32   `json:"riskCategoryId"`            // Категория риска.
+	ClientType                string  `json:"clientType"`                // Тип клиента:
+	HasForbiddenPositions     bool    `json:"hasForbiddenPositions"`     // Имеются ли запретные позиции
+	HasNegativeQuantity       bool    `json:"hasNegativeQuantity"`       // Имеются ли отрицательные количества
+}
+
+type PortfolioFortsRisk struct {
+	Portfolio          string  `json:"portfolio"`          // Идентификатор клиентского портфеля
+	MoneyFree          float64 `json:"moneyFree"`          // Свободные средства. Сумма рублей и залогов, дисконтированных в рубли, доступная для открытия позиций. (MoneyFree = MoneyAmount + VmInterCl – MoneyBlocked – VmReserve – Fee)
+	MoneyBlocked       float64 `json:"moneyBlocked"`       // Средства, заблокированные под ГО
+	Fee                float64 `json:"fee"`                // Списанный сбор
+	MoneyOld           float64 `json:"moneyOld"`           // Общее количество рублей и дисконтированных в рубли залогов на начало сессии
+	MoneyAmount        float64 `json:"moneyAmount"`        // Общее количество рублей и дисконтированных в рубли залогов
+	MoneyPledgeAmount  float64 `json:"moneyPledgeAmount"`  // Сумма залогов, дисконтированных в рубли
+	VmInterCl          float64 `json:"vmInterCl"`          // Вариационная маржа, списанная или полученная в пром. клиринг
+	VmCurrentPositions float64 `json:"vmCurrentPositions"` // Сагрегированная вармаржа по текущим позициям
+	VarMargin          float64 `json:"varMargin"`          // Вариационная маржа, рассчитанная по формуле VmCurrentPositions + VmInterCl
+	IsLimitsSet        bool    `json:"isLimitsSet"`        // Наличие установленных денежного и залогового лимитов
 }
 
 type Position struct {

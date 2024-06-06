@@ -92,15 +92,16 @@ func (c *Client) GetSecurities(ctx context.Context, opts ...Option) ([]Security,
 
 // Security defines model for security.
 type Security struct {
-	Symbol                 string  `json:"symbol"`                  // Symbol Тикер (Код финансового инструмента)
-	ShortName              string  `json:"shortname"`               // Shortname Краткое наименование инструмента
-	Description            string  `json:"description,omitempty"`   // Description Краткое описание инструмента
-	Exchange               string  `json:"exchange"`                // Exchange Биржа
-	Board                  string  `json:"board"`                   //Код режима торгов (Борд):
-	LotSize                float64 `json:"lotsize"`                 // Lotsize Размер лота
-	MinStep                float64 `json:"minstep"`                 // Minstep Минимальный шаг цены
-	PriceStep              float64 `json:"pricestep"`               // Pricestep Минимальный шаг цены, выраженный в рублях
-	Cancellation           string  `json:"cancellation,omitempty"`  // Cancellation Дата и время (UTC) окончания действия
+	Symbol       string  `json:"symbol"`                 // Symbol Тикер (Код финансового инструмента)
+	ShortName    string  `json:"shortname"`              // Shortname Краткое наименование инструмента
+	Description  string  `json:"description,omitempty"`  // Description Краткое описание инструмента
+	Exchange     string  `json:"exchange"`               // Exchange Биржа
+	Board        string  `json:"board"`                  //Код режима торгов (Борд):
+	LotSize      float64 `json:"lotsize"`                // Lotsize Размер лота
+	MinStep      float64 `json:"minstep"`                // Minstep Минимальный шаг цены
+	PriceStep    float64 `json:"pricestep"`              // Pricestep Минимальный шаг цены, выраженный в рублях
+	Cancellation string  `json:"cancellation,omitempty"` // Cancellation Дата и время (UTC) окончания действия
+	//Cancellation           time.Time `json:"cancellation,omitempty"`  // Cancellation Дата и время (UTC) окончания действия
 	CfiCode                string  `json:"cfiCode,omitempty"`       // CfiCode Тип ценной бумаги согласно стандарту ISO 10962
 	ComplexProductCategory string  `json:"complexProductCategory"`  // ComplexProductCategory Требуемая категория для осуществления торговли инструментом
 	Currency               string  `json:"currency,omitempty"`      // Currency Валюта

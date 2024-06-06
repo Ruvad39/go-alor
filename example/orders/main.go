@@ -27,7 +27,7 @@ func main() {
 
 	// создание клиента
 	client := alor.NewClient(refreshToken)
-	client.SetLogDebug(true)
+	//client.SetLogDebug(true)
 
 	// Получение информации о заявках (ордерах)
 	portfolio := "D88833" // номер счета (spot)
@@ -69,20 +69,20 @@ func main() {
 
 	client.Portfolio = portfolio // номер счета должен быть указан в клиенте
 	// покупка по рынку
-	//orderID, err := client.BuyMarket(ctx, "NVTK", 1, "comment к сделке")
+	//orderID, err := client.BuyMarket(ctx, "SBER", 1, "comment к сделке")
 	// продажа по рынку
-	//orderID, err := client.SellMarket(ctx, "MOEX", 1, "comment к сделке")
+	orderID, err := client.SellMarket(ctx, "SBER", 1, "comment к сделке")
 
 	// лимитная продажа
 	//orderID, err := client.SellLimit(ctx, "NVTK", 1, 1228, "comment к сделке")
 	// лимитная покупка
 	//orderID, err := client.BuyLimit(ctx, "SBER", 1, 322.1, "comment к сделке")
 	//
-	//if err != nil {
-	//	slog.Error("main.SendOrder", "err", err.Error())
-	//	return
-	//}
-	//slog.Info("sendOrder", "orderID", orderID)
+	if err != nil {
+		slog.Error("main.SendOrder", "err", err.Error())
+		//return
+	}
+	slog.Info("sendOrder", "orderID", orderID)
 
 	// отменить ордер
 	//orderId := "47050802385"
@@ -104,7 +104,7 @@ func main() {
 
 }
 
-// события появдения заявки
+// события появления заявки
 func OnOrder(order alor.Order) {
 	slog.Info("OnOrder", slog.Any("order", order))
 }

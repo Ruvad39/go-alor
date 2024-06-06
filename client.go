@@ -82,6 +82,9 @@ func NewClient(token string) *Client {
 
 // Client define API client
 type Client struct {
+	fortsAccount    string    // Номер счета для работы с ФОРТС
+	stockAccount    string    // Номер счета для работы с фондовым рынком
+	fxAccount       string    // Номер счета для работы с валютным рынком
 	Portfolio       string    // ID портфеля с которым работаем по умолчанию
 	refreshToken    string    // Refresh токен пользователя
 	accessToken     string    // JWT токен для дальнейшей авторизации
@@ -89,6 +92,21 @@ type Client struct {
 	Exchange        string    // С какой биржей работаем по умолчанию
 	HTTPClient      *http.Client
 	Stream
+}
+
+// установим номер счета для работы с рынком фортс
+func (c *Client) SetFortsAccount(account string) {
+	c.fortsAccount = account
+}
+
+// установим номер счета для работы с валютным рынком
+func (c *Client) SetFxAccount(account string) {
+	c.fxAccount = account
+}
+
+// установим номер счета для работы с фондовым рынком
+func (c *Client) SetStockAccount(account string) {
+	c.stockAccount = account
 }
 
 // SetLogDebug установим уровень логгирования Debug

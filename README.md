@@ -27,6 +27,12 @@ GetQuotes(ctx context.Context, symbols string) ([]Quote, error)
 // GetQuote Получение информации о котировках для одного выбранного инструмента
 GetQuote(ctx context.Context, symbol string) (Quote, error)
 
+// GetPortfolio Получение информации о портфеле
+GetPortfolio(ctx context.Context, portfolio string) (Portfolio, error)
+
+// GetPortfolioRisk Получение информации по портфельным рискам
+GetPortfolioRisk(ctx context.Context, portfolio string) (PortfolioRisk, error)
+
 // GetPositions получение информации о позициях
 GetPositions(ctx context.Context, portfolio string) ([]Position, error)
 

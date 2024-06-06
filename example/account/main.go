@@ -36,13 +36,22 @@ func main() {
 	//return
 
 	// Получение информации о портфеле
-	portfolio := "D88833" // номер счета (срочный)
+	portfolio := "D88833" // номер счета
 	p, err := client.GetPortfolio(ctx, portfolio)
 	if err != nil {
 		slog.Info("main.GetPortfolio", "err", err.Error())
 		return
 	}
 	slog.Info("portfolio", slog.Any("p", p))
+
+	//  сводную информацию по портфельным рискам для указанного портфеля
+	risk, err := client.GetPortfolioRisk(ctx, portfolio)
+	//risk, err := client.GetPortfolioFortsRisk(ctx, "7502I56")
+	if err != nil {
+		slog.Info("main.GetPortfolioRisk", "err", err.Error())
+		return
+	}
+	slog.Info("GetPortfolioRisk", slog.Any("risk", risk))
 
 	// получение информации о позициях
 	positions, err := client.GetPositions(ctx, portfolio)

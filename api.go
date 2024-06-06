@@ -9,6 +9,10 @@ import (
 
 // какой api реализован
 type IAlorClient interface {
+
+	// GetAccount получим номер счета от кода режима торгов
+	GetAccount(board string) string
+
 	// GetTime текущее время сервера
 	GetTime(ctx context.Context) (time.Time, error)
 
@@ -23,6 +27,15 @@ type IAlorClient interface {
 
 	// GetQuote Получение информации о котировках для одного выбранного инструмента
 	GetQuote(ctx context.Context, symbol string) (Quote, error)
+
+	// GetPortfolio Получение информации о портфеле
+	GetPortfolio(ctx context.Context, portfolio string) (Portfolio, error)
+
+	// GetPortfolioRisk Получение информации по портфельным рискам
+	GetPortfolioRisk(ctx context.Context, portfolio string) (PortfolioRisk, error)
+
+	// GetPortfolioRisk Получение информации по рискам срочного рынка (FORTS) для указанного портфеля.
+	GetPortfolioFortsRisk(ctx context.Context, portfolio string) (PortfolioFortsRisk, error)
 
 	// GetPositions получение информации о позициях
 	GetPositions(ctx context.Context, portfolio string) ([]Position, error)
@@ -93,4 +106,19 @@ func (c *Client) GetTime(ctx context.Context) (time.Time, error) {
 	}
 	t := time.Unix(timeUnix, 0)
 	return t, err
+}
+
+// GetAccount получим номер счета от кода режима торгов
+func (c *Client) GetAccount(board string) string {
+	// Для валютного рынка
+	if board == "CETS" {
+		return c.fxAccount
+	}
+	// Для фьючерсов и опционов
+	if board == "RFUD" || board == "ROPD" {
+		return c.fortsAccount
+	}
+	// Для остальных рынков
+	return c.stockAccount
+
 }

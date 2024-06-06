@@ -29,7 +29,7 @@ func main() {
 	client.SetLogDebug(true)
 
 	// получить список свечей по инструменту
-	timeFrom, _ := time.Parse("2006-01-02", "2024-05-25")
+	timeFrom, _ := time.Parse("2006-01-02", "2024-01-25")
 	timeTo, _ := time.Parse("2006-01-02", "2024-06-01")
 
 	//history, err := client.GetHistory(ctx, "SBER", alor.Interval_D1, timeFrom.Unix(), timeTo.Unix())

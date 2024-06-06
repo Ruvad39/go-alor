@@ -47,6 +47,7 @@ func main() {
 		"ShortName", sec.ShortName,
 		"LotSize", sec.LotSize,
 		"MinStep", sec.MinStep,
+		"Cancellation", sec.Cancellation,
 	)
 
 	// Если не указано иное значение параметра limit, в ответе возвращается только 25 объектов за раз
@@ -70,6 +71,7 @@ func main() {
 			"ShortName", sec.ShortName,
 			"LotSize", sec.LotSize,
 			"MinStep", sec.MinStep,
+			"Cancellation", sec.Cancellation,
 		)
 	}
 
