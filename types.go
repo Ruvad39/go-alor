@@ -286,3 +286,25 @@ type Order struct {
 func IsActiveOrder(o Order) bool {
 	return o.Status == OrderStatusWorking
 }
+
+// структура сделки
+type Trade struct {
+	Id           string    `json:"id"`           // Уникальный идентификатор сделки
+	OrderNo      string    `json:"orderNo"`      // Уникальный идентификатор заявки
+	Comment      string    `json:"comment"`      // Пользовательский комментарий к заявке
+	Symbol       string    `json:"symbol"`       // Тикер (Код финансового инструмента).
+	BrokerSymbol string    `json:"brokerSymbol"` // Пара Биржа:Тикер
+	Exchange     string    `json:"exchange"`     // Биржа
+	Date         time.Time `json:"date"`         // Дата и время завершения (UTC)
+	Board        string    `json:"board"`        // Код режима торгов (Борд):
+	QtyUnits     int32     `json:"qtyUnits"`     // Количество (штуки)
+	QtyBatch     int       `json:"qtyBatch"`     // Количество (лоты)
+	Qty          int       `json:"qty"`          // Количество (лоты)
+	Price        float64   `json:"price"`        // Цена
+	AccruedInt   int       `json:"accruedInt"`   // Начислено (НКД)
+	Side         string    `json:"side"`         // Направление сделки:
+	Existing     bool      `json:"existing"`     // True — для данных из "снепшота", то есть из истории. False — для новых событий
+	Commission   float64   `json:"commission"`   // Суммарная комиссия (null для Срочного рынка)
+	//RepoSpecificFields interface{} `json:"repoSpecificFields"` // Специальные поля для сделок РЕПО
+	Volume float64 `json:"volume"` // Объём, рассчитанный по средней цене
+}

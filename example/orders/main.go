@@ -67,33 +67,33 @@ func main() {
 	//	Comment("комментарий к сделке").
 	//	Do(ctx)
 
-	client.Portfolio = portfolio // номер счета должен быть указан в клиенте
+	client.SetAccount(portfolio) // номер счета для работы по умолчанию
 	// покупка по рынку
 	//orderID, err := client.BuyMarket(ctx, "SBER", 1, "comment к сделке")
 	// продажа по рынку
-	orderID, err := client.SellMarket(ctx, "SBER", 1, "comment к сделке")
+	//orderID, err := client.SellMarket(ctx, "SBER", 1, "comment к сделке")
 
 	// лимитная продажа
 	//orderID, err := client.SellLimit(ctx, "NVTK", 1, 1228, "comment к сделке")
 	// лимитная покупка
-	//orderID, err := client.BuyLimit(ctx, "SBER", 1, 322.1, "comment к сделке")
-	//
-	if err != nil {
-		slog.Error("main.SendOrder", "err", err.Error())
-		//return
-	}
-	slog.Info("sendOrder", "orderID", orderID)
+	//orderID, err := client.BuyLimit(ctx, "SBER", 1, 311.1, "comment к сделке")
+	////
+	//if err != nil {
+	//	slog.Error("main.SendOrder", "err", err.Error())
+	//	//return
+	//}
+	//slog.Info("sendOrder", "orderID", orderID)
 
 	// отменить ордер
-	//orderId := "47050802385"
-	//ok, err := client.CancelOrder(ctx, portfolio, orderId)
-	//if err != nil {
-	//	slog.Error("main.CancelOrder", "err", err.Error(), "ok", ok)
-	//	return
-	//}
-	//if ok {
-	//	slog.Info("CancelOrder успешно выполнено")
-	//}
+	orderId := "48072118608"
+	ok, err := client.CancelOrder(ctx, portfolio, orderId)
+	if err != nil {
+		slog.Error("main.CancelOrder", "err", err.Error(), "ok", ok)
+		return
+	}
+	if ok {
+		slog.Info("CancelOrder успешно выполнено")
+	}
 
 	//----------------------------------
 	// ожидание сигнала о закрытие

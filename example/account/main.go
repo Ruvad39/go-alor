@@ -46,7 +46,6 @@ func main() {
 
 	//  сводную информацию по портфельным рискам для указанного портфеля
 	risk, err := client.GetPortfolioRisk(ctx, portfolio)
-	//risk, err := client.GetPortfolioFortsRisk(ctx, "7502I56")
 	if err != nil {
 		slog.Info("main.GetPortfolioRisk", "err", err.Error())
 		return
