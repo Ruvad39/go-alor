@@ -94,7 +94,7 @@ func (c *Client) CancelOrder(ctx context.Context, portfolio, orderId string) (bo
 // NewCreateOrderService создать новый ордер
 func (c *Client) NewCreateOrderService() *CreateOrderService {
 	user := User{
-		Portfolio: c.account, // проставим по умолчанию
+		Portfolio: c.portfolioID, // проставим по умолчанию
 	}
 	ticker := Instrument{
 		Symbol:   "",

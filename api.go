@@ -108,17 +108,17 @@ func (c *Client) GetTime(ctx context.Context) (time.Time, error) {
 	return t, err
 }
 
-// GetAccount получим номер счета от кода режима торгов
-func (c *Client) GetAccount(board string) string {
+// GetPortfolioID получим номер счета от кода режима торгов
+func (c *Client) GetPortfolioID(board string) string {
 	// Для валютного рынка
 	if board == "CETS" {
-		return c.fxAccount
+		return c.fxPortfolio
 	}
 	// Для фьючерсов и опционов
 	if board == "RFUD" || board == "ROPD" {
-		return c.fortsAccount
+		return c.fortsPortfolio
 	}
 	// Для остальных рынков
-	return c.stockAccount
+	return c.stockPortfolio
 
 }

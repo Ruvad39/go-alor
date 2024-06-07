@@ -47,7 +47,7 @@ func main() {
 		slog.Error("main.GetOrders", "err", err.Error())
 		return
 	}
-	slog.Info("orders", "кол-во", len(orders))
+	slog.Info("GetOrders", "кол-во", len(orders))
 	for n, order := range orders {
 		slog.Info("order",
 			"row", n,
@@ -67,7 +67,7 @@ func main() {
 	//	Comment("комментарий к сделке").
 	//	Do(ctx)
 
-	client.SetAccount(portfolio) // номер счета для работы по умолчанию
+	client.SetPortfolioID(portfolio) // номер счета для работы по умолчанию
 	// покупка по рынку
 	//orderID, err := client.BuyMarket(ctx, "SBER", 1, "comment к сделке")
 	// продажа по рынку

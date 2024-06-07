@@ -82,10 +82,10 @@ func NewClient(token string) *Client {
 
 // Client define API client
 type Client struct {
-	account         string    // Номер счета по умолчанию (Portfolio)
-	fortsAccount    string    // Номер счета для работы с ФОРТС
-	stockAccount    string    // Номер счета для работы с фондовым рынком
-	fxAccount       string    // Номер счета для работы с валютным рынком
+	portfolioID     string    // Номер счета по умолчанию (Portfolio)
+	fortsPortfolio  string    // Номер счета для работы с ФОРТС
+	stockPortfolio  string    // Номер счета для работы с фондовым рынком
+	fxPortfolio     string    // Номер счета для работы с валютным рынком
 	refreshToken    string    // Refresh токен пользователя
 	accessToken     string    // JWT токен для дальнейшей авторизации
 	cancelTimeToken time.Time // Время завершения действия JWT токена
@@ -95,24 +95,24 @@ type Client struct {
 	//Portfolio       string    // ID портфеля с которым работаем по умолчанию
 }
 
-// SetAccount установим номер счета по умолчанию
-func (c *Client) SetAccount(account string) {
-	c.account = account
+// SetPortfolioID установим номер счета по умолчанию
+func (c *Client) SetPortfolioID(portfolio string) {
+	c.portfolioID = portfolio
 }
 
-// SetFortsAccount установим номер счета для работы с рынком фортс
-func (c *Client) SetFortsAccount(account string) {
-	c.fortsAccount = account
+// SetFortsPortfolio установим номер счета для работы с рынком фортс
+func (c *Client) SetFortsPortfolio(portfolio string) {
+	c.fortsPortfolio = portfolio
 }
 
-// SetFxAccount установим номер счета для работы с валютным рынком
-func (c *Client) SetFxAccount(account string) {
-	c.fxAccount = account
+// SetFxAPortfolio установим номер счета для работы с валютным рынком
+func (c *Client) SetFxAPortfolio(portfolio string) {
+	c.fxPortfolio = portfolio
 }
 
-// SetStockAccount установим номер счета для работы с фондовым рынком
-func (c *Client) SetStockAccount(account string) {
-	c.stockAccount = account
+// SetStockPortfolio установим номер счета для работы с фондовым рынком
+func (c *Client) SetStockPortfolio(portfolio string) {
+	c.stockPortfolio = portfolio
 }
 
 // SetLogDebug установим уровень логгирования Debug

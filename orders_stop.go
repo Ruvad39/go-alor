@@ -144,7 +144,7 @@ func (s *CreateOrderStopService) Activate(activate bool) *CreateOrderStopService
 // NewCreateOrderStopService создать новую stop/stopLimit заявку
 func (c *Client) NewCreateOrderStopService() *CreateOrderStopService {
 	user := User{
-		Portfolio: c.account, // проставим по умолчанию
+		Portfolio: c.portfolioID, // проставим по умолчанию
 	}
 	ticker := Instrument{
 		Symbol:   "",
