@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/Ruvad39/go-alor"
-	"github.com/joho/godotenv"
+	//"fmt"
 	"log/slog"
 	"os"
+
+	"github.com/Ruvad39/go-alor"
+	"github.com/joho/godotenv"
 )
 
 // init is invoked before main()
@@ -43,6 +45,7 @@ func main() {
 		return
 	}
 	slog.Info("portfolio", slog.Any("p", p))
+	//fmt.Printf("portfolio %v", p)
 
 	//  сводную информацию по портфельным рискам для указанного портфеля
 	risk, err := client.GetPortfolioRisk(ctx, portfolio)

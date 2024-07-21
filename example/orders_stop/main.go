@@ -48,7 +48,7 @@ func main() {
 		Symbol("SBER").
 		Side(alor.SideTypeBuy).
 		OrderType(alor.OrderTypeStop).
-		TriggerPrice(323.5).
+		TriggerPrice(311.5).
 		Qty(1).
 		Portfolio(portfolio).
 		Do(ctx)

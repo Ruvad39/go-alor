@@ -305,6 +305,6 @@ type Trade struct {
 	Side         string    `json:"side"`         // Направление сделки:
 	Existing     bool      `json:"existing"`     // True — для данных из "снепшота", то есть из истории. False — для новых событий
 	Commission   float64   `json:"commission"`   // Суммарная комиссия (null для Срочного рынка)
+	Volume       float64   `json:"volume"`       // Объём, рассчитанный по средней цене
 	//RepoSpecificFields interface{} `json:"repoSpecificFields"` // Специальные поля для сделок РЕПО
-	Volume float64 `json:"volume"` // Объём, рассчитанный по средней цене
 }
