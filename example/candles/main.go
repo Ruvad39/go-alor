@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	//"fmt"
 	"github.com/Ruvad39/go-alor"
 	"github.com/joho/godotenv"
 	"log/slog"
@@ -29,8 +29,8 @@ func main() {
 	client.SetLogDebug(true)
 
 	// получить список свечей по инструменту
-	timeFrom, _ := time.Parse("2006-01-02", "2024-01-25")
-	timeTo, _ := time.Parse("2006-01-02", "2024-06-01")
+	timeFrom, _ := time.Parse("2006-01-02", "2024-01-01")
+	timeTo, _ := time.Parse("2006-01-02", "2024-04-01")
 
 	//history, err := client.GetHistory(ctx, "SBER", alor.Interval_D1, timeFrom.Unix(), timeTo.Unix())
 	//if err != nil {
@@ -45,23 +45,27 @@ func main() {
 	//		"close", candle.Close,
 	//	)
 	//}
-	symbol := "SBER"
-	interval := alor.Interval_D1
+	symbol := "Si-3.24"
+	interval := alor.Interval_M1
 	candles, err := client.GetCandles(ctx, symbol, interval, timeFrom.Unix(), timeTo.Unix())
 	if err != nil {
 		slog.Info("main.GetCandles", "err", err.Error())
 		return
 	}
-	slog.Info("candles", "кол-во", len(candles))
+	slog.Info("candles",
+		"кол-во", len(candles),
+		//"minDate", candles.(0).GeTime().String() ,
+		//"maxDate", candles.[len(candles)].GeTime().String(),
+	)
 
-	c := alor.Candle{}
-	fmt.Println(c.CsvHeader())
-	for _, candle := range candles {
-		candle.Symbol = symbol
-		candle.Interval = interval
-		//slog.Info("candle", "row", n, "Time", candle.GeTime(), "close", candle.Close)
-		//slog.Info("candle", "row", candle.CsvRecords())
-		fmt.Println(candle.CsvRecord())
-	}
+	// c := alor.Candle{}
+	// fmt.Println(c.CsvHeader())
+	// for _, candle := range candles {
+	// 	candle.Symbol = symbol
+	// 	candle.Interval = interval
+	// 	//slog.Info("candle", "row", n, "Time", candle.GeTime(), "close", candle.Close)
+	// 	//slog.Info("candle", "row", candle.CsvRecords())
+	// 	fmt.Println(candle.CsvRecord())
+	// }
 
 }

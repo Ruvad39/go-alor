@@ -2,13 +2,14 @@ package alor
 
 // Options параметры запроса по методам
 type Options struct {
-	Exchange string // Биржа MOEX, SPBX
-	Sector   string // Рынок на бирже FORTS, FOND, CURR
-	Board    string // Режим торгов (instrumentGroup)
-	Symbol   string // Код инструмента
-	Query    string // Query Тикер (Код финансового инструмента) ищет по вхождению
-	Limit    int32  // Ограничение на количество выдаваемых результатов поиска
-	Offset   int32  // Смещение начала выборки (для пагинации)
+	Exchange   string // Биржа MOEX, SPBX
+	Sector     string // Рынок на бирже FORTS, FOND, CURR
+	Board      string // Режим торгов (instrumentGroup)
+	Symbol     string // Код инструмента
+	Query      string // Query Тикер (Код финансового инструмента) ищет по вхождению
+	Limit      int32  // Ограничение на количество выдаваемых результатов поиска
+	Offset     int32  // Смещение начала выборки (для пагинации)
+	IncludeOld bool   // Флаг загрузки устаревших инструментов
 	//Format   string // Format Формат возвращаемого сервером JSON
 }
 
@@ -65,5 +66,12 @@ func WithLimit(param int32) Option {
 func WithOffset(param int32) Option {
 	return func(opts *Options) {
 		opts.Offset = param
+	}
+}
+
+// WithOld Флаг загрузки устаревших инструментов
+func WithOld(param bool) Option {
+	return func(opts *Options) {
+		opts.IncludeOld = param
 	}
 }

@@ -77,6 +77,10 @@ func (c *Client) GetSecurities(ctx context.Context, opts ...Option) ([]Security,
 	if params.Offset != 0 {
 		r.setParam("offset", params.Offset)
 	}
+	if params.IncludeOld {
+		r.setParam("includeOld", params.IncludeOld)
+
+	}
 
 	result := make([]Security, 0)
 	data, err := c.callAPI(ctx, r)
@@ -113,6 +117,8 @@ type Security struct {
 	PriceMin               float64 `json:"priceMin,omitempty"`      // PriceMin Минимальная цена
 	PrimaryBoard           string  `json:"primary_board,omitempty"` // PrimaryBoard Код режима торгов
 	Rating                 float64 `json:"rating,omitempty"`
+	OptionSide             string  `json:"optionside,omitempty"`  // Только для опционов. Сторона опциона:
+	StrikePrice            float64 `json:"strikePrice,omitempty"` // Только для опционов. Цена Страйк (Цена исполнения опциона)
 	TheorPrice             float64 `json:"theorPrice,omitempty"`
 	TheorPriceLimit        float64 `json:"theorPriceLimit,omitempty"`
 	TradingStatus          int     `json:"tradingStatus,omitempty"` // TradingStatus Торговый статус инструмента
